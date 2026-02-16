@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { Header } from '@/components/dashboard/Header'
+import type { Doctor } from '@/types'
 
 export default async function DashboardLayout({
   children,
@@ -21,7 +22,7 @@ export default async function DashboardLayout({
     .from('doctors')
     .select('id, user_id, full_name, email, phone, specialty, avatar_url, clinic_name, updated_at')
     .eq('user_id', user?.id)
-    .maybeSingle()
+    .maybeSingle() as { data: Partial<Doctor> | null }
 
   // If no doctor profile, show error message instead of redirecting
   if (!doctor) {

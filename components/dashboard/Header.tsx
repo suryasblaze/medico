@@ -16,7 +16,7 @@ import { Button } from '@/components/ui/button'
 import type { Doctor } from '@/types'
 
 interface HeaderProps {
-  doctor: Doctor
+  doctor: Pick<Doctor, 'id' | 'full_name' | 'email' | 'avatar_url'>
 }
 
 export function Header({ doctor }: HeaderProps) {

@@ -71,22 +71,24 @@ export default async function SettingsPage() {
                 <p className="text-sm font-medium text-muted-foreground">
                   Subscription Plan
                 </p>
-                <p className="text-sm capitalize">{doctor.subscription_plan}</p>
+                <p className="text-sm capitalize">{doctor.subscription_plan || 'free'}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
                   Subscription Status
                 </p>
-                <p className="text-sm capitalize">{doctor.subscription_status}</p>
+                <p className="text-sm capitalize">{doctor.subscription_status || 'active'}</p>
               </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Member Since
-                </p>
-                <p className="text-sm">
-                  {new Date(doctor.created_at).toLocaleDateString()}
-                </p>
-              </div>
+              {doctor.created_at && (
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Member Since
+                  </p>
+                  <p className="text-sm">
+                    {new Date(doctor.created_at).toLocaleDateString()}
+                  </p>
+                </div>
+              )}
               {doctor.trial_ends_at && doctor.subscription_status === 'trial' && (
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">

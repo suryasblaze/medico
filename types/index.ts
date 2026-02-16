@@ -7,11 +7,11 @@ export interface Doctor {
   clinic_name?: string
   phone?: string
   avatar_url?: string
-  subscription_status: 'trial' | 'active' | 'cancelled' | 'expired'
-  subscription_plan: 'free' | 'basic' | 'pro' | 'enterprise'
+  subscription_status?: 'trial' | 'active' | 'cancelled' | 'expired'
+  subscription_plan?: 'free' | 'basic' | 'pro' | 'enterprise'
   trial_ends_at?: string
-  created_at: string
-  updated_at: string
+  created_at?: string
+  updated_at?: string
 }
 
 export interface Patient {

@@ -75,7 +75,7 @@ export default async function PatientDetailPage({
         <CardContent className="pt-6">
           <div className="flex items-start gap-6">
             <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-              {patient.full_name.split(' ').map(n => n[0]).join('').toUpperCase()}
+              {patient.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
             </div>
             <div className="flex-1">
               <div className="flex items-start justify-between">

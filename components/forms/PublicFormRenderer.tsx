@@ -64,7 +64,12 @@ export function PublicFormRenderer({ form, fields }: PublicFormRendererProps) {
       const submissionId = crypto.randomUUID()
 
       // Upload files if any
-      let attachments = []
+      let attachments: Array<{
+        field_id: string
+        file_url: string
+        file_name: string
+        file_size: number
+      }> = []
       if (Object.keys(files).length > 0) {
         const filesToUpload = Object.entries(files).map(([fieldId, file]) => ({
           fieldId,

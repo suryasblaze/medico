@@ -18,14 +18,14 @@ export default async function DashboardLayout({
   } = await supabase.auth.getUser()
 
   // Fetch doctor profile - middleware ensures user exists
-  const { data: doctor } = await supabase
+  const { data: doctorData } = await supabase
     .from('doctors')
     .select('id, user_id, full_name, email, phone, specialty, avatar_url, clinic_name, updated_at')
     .eq('user_id', user?.id)
-    .maybeSingle() as { data: Partial<Doctor> | null }
+    .maybeSingle()
 
   // If no doctor profile, show error message instead of redirecting
-  if (!doctor) {
+  if (!doctorData) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 shadow-lg dark:border-red-900 dark:bg-gray-950">
@@ -37,6 +37,9 @@ export default async function DashboardLayout({
       </div>
     )
   }
+
+  // Type-safe doctor object after null check
+  const doctor = doctorData as Pick<Doctor, 'id' | 'full_name' | 'email' | 'avatar_url'>
 
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">

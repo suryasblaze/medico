@@ -91,7 +91,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                 </label>
 
                 {/* Field preview based on type */}
-                {field.type === 'text' && (
+                {field.field_type === 'text' && (
                   <input
                     type="text"
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
@@ -100,7 +100,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   />
                 )}
 
-                {field.type === 'textarea' && (
+                {field.field_type === 'textarea' && (
                   <textarea
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}
                     disabled
@@ -109,7 +109,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   />
                 )}
 
-                {field.type === 'select' && field.options && (
+                {field.field_type === 'select' && field.options && (
                   <select
                     disabled
                     className="w-full p-2 border border-gray-200 dark:border-gray-800 rounded-md bg-gray-50 dark:bg-gray-900 text-sm"
@@ -123,7 +123,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   </select>
                 )}
 
-                {field.type === 'checkbox' && (
+                {field.field_type === 'checkbox' && (
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
@@ -136,7 +136,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   </div>
                 )}
 
-                {field.type === 'radio' && field.options && (
+                {field.field_type === 'radio' && field.options && (
                   <div className="space-y-2">
                     {field.options.map((option, i) => (
                       <div key={i} className="flex items-center gap-2">
@@ -152,7 +152,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   </div>
                 )}
 
-                {field.type === 'date' && (
+                {field.field_type === 'date' && (
                   <input
                     type="date"
                     disabled
@@ -160,7 +160,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
                   />
                 )}
 
-                {field.type === 'number' && (
+                {field.field_type === 'number' && (
                   <input
                     type="number"
                     placeholder={field.placeholder || `Enter ${field.label.toLowerCase()}`}

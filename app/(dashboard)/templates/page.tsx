@@ -34,7 +34,7 @@ export default async function TemplatesPage() {
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   return (
     <div className="space-y-6">

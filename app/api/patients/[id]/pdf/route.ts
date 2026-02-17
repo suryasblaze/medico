@@ -15,7 +15,7 @@ export async function GET(
       .from('doctors')
       .select('id, full_name, clinic_name')
       .eq('user_id', user?.id)
-      .single()
+      .maybeSingle()
 
     if (!doctor) {
       return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })
@@ -27,7 +27,7 @@ export async function GET(
       .select('*')
       .eq('id', params.id)
       .eq('doctor_id', doctor.id)
-      .single()
+      .maybeSingle()
 
     if (!patient) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })

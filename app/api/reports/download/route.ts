@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       .from('doctors')
       .select('full_name, clinic_name')
       .eq('id', doctorId)
-      .single()
+      .maybeSingle()
 
     if (!doctor) {
       return NextResponse.json({ error: 'Doctor not found' }, { status: 404 })

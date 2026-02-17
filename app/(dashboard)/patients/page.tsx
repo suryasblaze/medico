@@ -16,7 +16,7 @@ export default async function PatientsPage() {
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Fetch all patients for this doctor
   const { data: patients } = await supabase

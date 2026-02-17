@@ -29,7 +29,7 @@ export default async function PatientDetailPage({
     .from('doctors')
     .select('id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!doctor) {
     redirect('/login')
@@ -41,7 +41,7 @@ export default async function PatientDetailPage({
     .select('*')
     .eq('id', params.id)
     .eq('doctor_id', doctor.id)
-    .single()
+    .maybeSingle()
 
   if (!patient) {
     notFound()

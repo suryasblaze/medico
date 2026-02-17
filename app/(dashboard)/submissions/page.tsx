@@ -17,7 +17,7 @@ export default async function SubmissionsPage({
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Build query
   let query = supabase

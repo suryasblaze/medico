@@ -18,7 +18,7 @@ export default async function IntakeFormPage({ params }: IntakeFormPageProps) {
     .from('doctors')
     .select('id, full_name, clinic_name, specialty, email, phone')
     .eq('id', params.doctorId)
-    .single()
+    .maybeSingle()
 
   if (!doctor) {
     notFound()

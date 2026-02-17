@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     .from('doctors')
     .select('id, full_name')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Fetch only necessary data for dashboard - optimized queries
   const now = new Date()

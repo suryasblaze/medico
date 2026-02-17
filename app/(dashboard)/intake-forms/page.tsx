@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { headers } from 'next/headers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { CopyButton } from '@/components/ui/copy-button'
@@ -7,6 +8,10 @@ import Link from 'next/link'
 
 export default async function IntakeFormsPage() {
   const supabase = createClient()
+  const headersList = headers()
+  const host = headersList.get('host') || 'localhost:3000'
+  const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
+  const baseUrl = `${protocol}://${host}`
 
   const {
     data: { user },
@@ -16,10 +21,10 @@ export default async function IntakeFormsPage() {
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Generate shareable link
-  const intakeUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/intake/${doctor?.id}`
+  const intakeUrl = `${baseUrl}/intake/${doctor?.id}`
 
   // Get recent patients (last 10)
   const { data: recentPatients } = await supabase

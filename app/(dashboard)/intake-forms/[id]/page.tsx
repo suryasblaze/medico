@@ -22,7 +22,7 @@ export default async function IntakeFormDetailPage({ params }: IntakeFormDetailP
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Fetch the intake form
   const { data: intakeForm } = await supabase
@@ -30,7 +30,7 @@ export default async function IntakeFormDetailPage({ params }: IntakeFormDetailP
     .select('*')
     .eq('id', params.id)
     .eq('doctor_id', doctor?.id)
-    .single()
+    .maybeSingle()
 
   if (!intakeForm) {
     notFound()

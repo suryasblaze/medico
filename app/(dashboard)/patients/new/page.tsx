@@ -22,7 +22,7 @@ export default async function NewPatientPage() {
     .from('doctors')
     .select('id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!doctor) {
     redirect('/login')

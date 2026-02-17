@@ -20,7 +20,7 @@ export default async function SettingsPage() {
     .from('doctors')
     .select('*')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!doctor) {
     redirect('/login')

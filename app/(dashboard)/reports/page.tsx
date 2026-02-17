@@ -14,7 +14,7 @@ export default async function ReportsPage() {
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Fetch data for reports
   const [

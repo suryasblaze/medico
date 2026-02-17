@@ -16,7 +16,7 @@ export default async function FormsPage() {
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Fetch all forms for this doctor
   const { data: forms } = await supabase

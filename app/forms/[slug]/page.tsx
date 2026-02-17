@@ -17,7 +17,7 @@ export default async function PublicFormPage({
     .select('*')
     .eq('slug', params.slug)
     .eq('is_active', true)
-    .single()
+    .maybeSingle()
 
   if (!form) {
     notFound()

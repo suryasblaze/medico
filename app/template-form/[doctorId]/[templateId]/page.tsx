@@ -20,7 +20,7 @@ export default async function TemplateFormPage({ params }: TemplateFormPageProps
     .from('doctors')
     .select('id, full_name, clinic_name, specialty, email, phone')
     .eq('id', params.doctorId)
-    .single()
+    .maybeSingle()
 
   if (!doctor) {
     notFound()

@@ -19,7 +19,7 @@ export default async function FormSuccessPage({
     .from('forms')
     .select('title, success_message, allow_multiple_submissions')
     .eq('slug', params.slug)
-    .single()
+    .maybeSingle()
 
   if (!form) {
     notFound()

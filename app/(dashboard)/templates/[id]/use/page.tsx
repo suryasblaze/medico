@@ -27,7 +27,7 @@ export default async function TemplateUsePage({ params }: TemplateUsePageProps) 
     .from('doctors')
     .select('id')
     .eq('user_id', user?.id)
-    .single()
+    .maybeSingle()
 
   // Fetch all patients
   const { data: patients } = await supabase

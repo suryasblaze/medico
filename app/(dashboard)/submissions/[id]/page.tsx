@@ -25,7 +25,7 @@ export default async function SubmissionDetailPage({
     .from('doctors')
     .select('id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
   if (!doctor) {
     redirect('/login')
@@ -37,7 +37,7 @@ export default async function SubmissionDetailPage({
     .select('*, forms(title, slug)')
     .eq('id', params.id)
     .eq('doctor_id', doctor.id)
-    .single()
+    .maybeSingle()
 
   if (!submission) {
     notFound()

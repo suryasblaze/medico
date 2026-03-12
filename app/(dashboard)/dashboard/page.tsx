@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
-import { getCurrentDoctor } from '@/lib/supabase/queries'
+import { getCurrentDoctor, getCachedDashboardStats } from '@/lib/supabase/queries'
 import { StatsCard } from '@/components/dashboard/StatsCard'
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts'
 import { Activity, Users, Calendar, TrendingUp } from 'lucide-react'
@@ -7,44 +6,12 @@ import { Activity, Users, Calendar, TrendingUp } from 'lucide-react'
 export default async function DashboardPage() {
   // Use cached doctor - already fetched in layout
   const doctor = await getCurrentDoctor()
-  const supabase = createClient()
 
-  // Fetch only necessary data for dashboard - optimized queries
+  // Use persistent cached stats for faster loading
+  const { patientsCount, medicalRecordsCount, recentRecords, recentPatients } =
+    await getCachedDashboardStats(doctor?.id || '')
+
   const now = new Date()
-  const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 6, 1)
-
-  const [
-    { count: patientsCount },
-    { count: medicalRecordsCount },
-    { data: recentRecords },
-    { data: recentPatients }
-  ] = await Promise.all([
-    // Count only
-    supabase
-      .from('patients')
-      .select('id', { count: 'exact', head: true })
-      .eq('doctor_id', doctor?.id),
-    // Count only
-    supabase
-      .from('medical_records')
-      .select('id', { count: 'exact', head: true })
-      .eq('doctor_id', doctor?.id),
-    // Only recent records for charts (last 6 months)
-    supabase
-      .from('medical_records')
-      .select('visit_date, visit_type')
-      .eq('doctor_id', doctor?.id)
-      .gte('visit_date', sixMonthsAgo.toISOString())
-      .order('visit_date', { ascending: false })
-      .limit(200),
-    // Only recent patients for growth chart (last 6 months)
-    supabase
-      .from('patients')
-      .select('created_at')
-      .eq('doctor_id', doctor?.id)
-      .gte('created_at', sixMonthsAgo.toISOString())
-      .order('created_at', { ascending: false })
-  ])
 
   // Calculate stats
   const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)

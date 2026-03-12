@@ -83,8 +83,8 @@ export function LoginForm() {
 
       // Only proceed if login was successful
       if (data.user) {
-        // Fast client-side navigation
-        router.replace('/dashboard')
+        // Instant hard navigation for fastest redirect
+        window.location.href = '/dashboard'
       }
     } catch (err) {
       console.error('Login error:', err)

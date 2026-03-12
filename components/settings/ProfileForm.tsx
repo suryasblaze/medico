@@ -43,8 +43,16 @@ export function ProfileForm({ doctor }: ProfileFormProps) {
 
       if (error) throw error
 
+      // Clear server cache to show updated name immediately
+      await fetch('/api/revalidate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tag: 'doctor' })
+      })
+
       setSuccess(true)
-      window.location.reload()
+      // Force full page reload to get fresh data
+      window.location.href = '/settings'
     } catch (err: any) {
       setError(err.message || 'Failed to update profile')
     } finally {

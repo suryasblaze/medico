@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#9B2D8F"/>
+
+  <!-- Tooth shape -->
+  <path d="M32 12 C24 12 18 18 18 26 C18 34 20 42 24 50 C26 54 30 54 32 50 C34 54 38 54 40 50 C44 42 46 34 46 26 C46 18 40 12 32 12Z" fill="white" opacity="0.9"/>
+
+  <!-- V letter -->
+  <path d="M22 20 L28 36 L34 20" stroke="#9B2D8F" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- R letter -->
+  <path d="M36 20 L36 36 M36 20 L42 20 C45 20 45 26 42 26 L36 26 M38 26 L44 36" stroke="#F97316" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

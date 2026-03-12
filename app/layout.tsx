@@ -12,6 +12,12 @@ export const metadata: Metadata = {
   title: 'VR Dental Care - Patient Management System',
   description: 'Modern dental practice management platform for VR Dental Care',
   manifest: '/manifest.json',
+  icons: {
+    icon: [
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+    ],
+    apple: '/favicon.svg',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
@@ -33,10 +39,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <head>
-        <link rel="icon" href="/favicon.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/favicon.png" />
-      </head>
       <body className={`${poppins.className} ${poppins.variable} antialiased`}>{children}</body>
     </html>
   )

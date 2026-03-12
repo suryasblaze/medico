@@ -89,8 +89,9 @@ export function Header({ doctor }: HeaderProps) {
 
   return (
     <header className="border-b border-fuchsia-100 dark:border-fuchsia-900/30 bg-white/90 dark:bg-gray-950/90 backdrop-blur-lg">
-      <div className="flex h-16 items-center justify-between px-6">
-        <div className="flex-1 max-w-2xl">
+      <div className="flex h-14 md:h-16 items-center justify-between px-3 md:px-6">
+        {/* Search - hidden on mobile */}
+        <div className="hidden md:block flex-1 max-w-2xl">
           <div className="relative">
             <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-fuchsia-400" />
             <input
@@ -101,7 +102,14 @@ export function Header({ doctor }: HeaderProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        {/* Mobile: Show app name */}
+        <div className="md:hidden">
+          <h1 className="text-lg font-bold bg-gradient-to-r from-fuchsia-600 to-orange-500 bg-clip-text text-transparent">
+            VR Dental
+          </h1>
+        </div>
+
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Notifications */}
           <Popover>
             <PopoverTrigger asChild>
@@ -209,14 +217,14 @@ export function Header({ doctor }: HeaderProps) {
           {/* Profile */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 rounded-xl hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/30 px-3 py-2 transition-all hover:shadow-md">
-                <Avatar className="h-9 w-9 ring-2 ring-fuchsia-500/30">
+              <button className="flex items-center gap-2 md:gap-3 rounded-xl hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/30 px-2 md:px-3 py-1.5 md:py-2 transition-all hover:shadow-md">
+                <Avatar className="h-8 w-8 md:h-9 md:w-9 ring-2 ring-fuchsia-500/30">
                   <AvatarImage src={doctor.avatar_url || ''} alt={doctor.full_name} />
                   <AvatarFallback className="bg-gradient-to-br from-fuchsia-600 to-fuchsia-700 text-white text-xs font-bold">
                     {getInitials(doctor.full_name)}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex flex-col items-start">
+                <div className="hidden sm:flex flex-col items-start">
                   <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">
                     {doctor.full_name}
                   </span>

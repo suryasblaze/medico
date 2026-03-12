@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/select'
 import type { Patient } from '@/types'
 import { patientSchema, type PatientFormData } from '@/lib/validations/patient'
+import { Camera, Loader2, X, Plus, Phone } from 'lucide-react'
 
 interface PatientFormProps {
   doctorId: string
@@ -24,13 +25,18 @@ interface PatientFormProps {
 
 export function PatientForm({ doctorId, patient }: PatientFormProps) {
   const router = useRouter()
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(patient?.avatar_url || null)
+  const [loadingMrn, setLoadingMrn] = useState(!patient)
 
   const [formData, setFormData] = useState<PatientFormData>({
     full_name: patient?.full_name || '',
     email: patient?.email || '',
     phone: patient?.phone || '',
+    phone_numbers: patient?.phone_numbers || [''],
     date_of_birth: patient?.date_of_birth || '',
     gender: patient?.gender || undefined,
     address: patient?.address || '',
@@ -43,35 +49,186 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
     notes: patient?.notes || '',
   })
 
+  const addPhoneNumber = () => {
+    setFormData({
+      ...formData,
+      phone_numbers: [...(formData.phone_numbers || []), ''],
+    })
+  }
+
+  const removePhoneNumber = (index: number) => {
+    const newPhones = [...(formData.phone_numbers || [])]
+    newPhones.splice(index, 1)
+    setFormData({ ...formData, phone_numbers: newPhones.length ? newPhones : [''] })
+  }
+
+  const updatePhoneNumber = (index: number, value: string) => {
+    const newPhones = [...(formData.phone_numbers || [])]
+    newPhones[index] = value
+    setFormData({ ...formData, phone_numbers: newPhones, phone: newPhones[0] || '' })
+  }
+
+  // Auto-generate MRN for new patients
+  useEffect(() => {
+    if (patient) return // Skip for existing patients
+
+    const generateMrn = async () => {
+      try {
+        const supabase = createClient()
+
+        // Get the highest MRN number for this doctor
+        const { data, error } = await supabase
+          .from('patients')
+          .select('medical_record_number')
+          .eq('doctor_id', doctorId)
+          .not('medical_record_number', 'is', null)
+          .order('created_at', { ascending: false })
+
+        if (error) throw error
+
+        // Find the highest number from existing MRNs
+        let maxNumber = 0
+        if (data) {
+          for (const p of data) {
+            const mrn = p.medical_record_number
+            if (mrn) {
+              // Extract number from MRN (handles both "MRN-0001" and "1" formats)
+              const match = mrn.match(/(\d+)/)
+              if (match) {
+                const num = parseInt(match[1], 10)
+                if (num > maxNumber) maxNumber = num
+              }
+            }
+          }
+        }
+
+        // Generate next MRN with padding (e.g., MRN-0001)
+        const nextNumber = maxNumber + 1
+        const newMrn = `MRN-${nextNumber.toString().padStart(4, '0')}`
+
+        setFormData(prev => ({ ...prev, medical_record_number: newMrn }))
+      } catch (err) {
+        console.error('Failed to generate MRN:', err)
+        // Fallback to simple number
+        setFormData(prev => ({ ...prev, medical_record_number: 'MRN-0001' }))
+      } finally {
+        setLoadingMrn(false)
+      }
+    }
+
+    generateMrn()
+  }, [doctorId, patient])
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    // Validate file
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB')
+      return
+    }
+
+    setUploadingAvatar(true)
+    setError(null)
+
+    try {
+      const supabase = createClient()
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+      const filePath = `${doctorId}/${patient?.id || 'new'}/${fileName}`
+
+      // Delete old avatar if exists
+      if (avatarUrl) {
+        const oldPath = avatarUrl.split('/patient-avatars/')[1]
+        if (oldPath) {
+          await supabase.storage.from('patient-avatars').remove([oldPath])
+        }
+      }
+
+      // Upload new avatar
+      const { error: uploadError } = await supabase.storage
+        .from('patient-avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('patient-avatars')
+        .getPublicUrl(filePath)
+
+      setAvatarUrl(urlData.publicUrl)
+
+      // If editing existing patient, update immediately
+      if (patient) {
+        await supabase
+          .from('patients')
+          .update({ avatar_url: urlData.publicUrl })
+          .eq('id', patient.id)
+        router.refresh()
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload image')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  const removeAvatar = async () => {
+    if (!avatarUrl) return
+
+    setUploadingAvatar(true)
+    try {
+      const supabase = createClient()
+      const oldPath = avatarUrl.split('/patient-avatars/')[1]
+      if (oldPath) {
+        await supabase.storage.from('patient-avatars').remove([oldPath])
+      }
+      setAvatarUrl(null)
+
+      if (patient) {
+        await supabase
+          .from('patients')
+          .update({ avatar_url: null })
+          .eq('id', patient.id)
+        router.refresh()
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to remove image')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
 
     try {
-      // Validate with Zod
       const validatedData = patientSchema.parse(formData)
-
       const supabase = createClient()
 
       if (patient) {
-        // Update existing patient
         const { error } = await supabase
           .from('patients')
-          .update(validatedData)
+          .update({ ...validatedData, avatar_url: avatarUrl })
           .eq('id', patient.id)
 
         if (error) throw error
 
-        router.refresh()
-        router.push('/patients')
+        // Stay on page and hard refresh to show updated data
+        window.location.reload()
       } else {
-        // Create new patient
         const { error } = await supabase
           .from('patients')
           .insert({
             ...validatedData,
             doctor_id: doctorId,
+            avatar_url: avatarUrl,
           })
 
         if (error) throw error
@@ -81,7 +238,6 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
       }
     } catch (err: any) {
       if (err.errors) {
-        // Zod validation error
         setError(err.errors[0].message)
       } else {
         setError(err.message || 'Failed to save patient')
@@ -91,8 +247,69 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
     }
   }
 
+  const initials = formData.full_name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Profile Picture */}
+      <div className="flex items-center gap-6">
+        <div className="relative">
+          <div
+            className="h-24 w-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            {uploadingAvatar ? (
+              <Loader2 className="h-8 w-8 animate-spin" />
+            ) : avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt={formData.full_name}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              initials || <Camera className="h-8 w-8" />
+            )}
+          </div>
+          {avatarUrl && !uploadingAvatar && (
+            <button
+              type="button"
+              onClick={removeAvatar}
+              className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-white flex items-center justify-center hover:bg-destructive/90"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            onChange={handleAvatarUpload}
+            className="hidden"
+          />
+        </div>
+        <div>
+          <h3 className="font-medium">Profile Picture</h3>
+          <p className="text-sm text-muted-foreground">
+            Click to upload a photo (max 5MB)
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploadingAvatar}
+          >
+            {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
+          </Button>
+        </div>
+      </div>
+
       {/* Basic Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold">Basic Information</h3>
@@ -118,15 +335,20 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
             </Label>
             <Input
               id="medical_record_number"
-              value={formData.medical_record_number}
+              value={loadingMrn ? 'Generating...' : formData.medical_record_number}
               onChange={(e) =>
                 setFormData({
                   ...formData,
                   medical_record_number: e.target.value,
                 })
               }
-              disabled={loading}
+              disabled={loading || loadingMrn || !patient}
+              readOnly={!patient}
+              className={!patient ? 'bg-muted' : ''}
             />
+            {!patient && (
+              <p className="text-xs text-muted-foreground">Auto-generated</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -184,17 +406,49 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
-              disabled={loading}
-            />
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Phone Numbers</Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addPhoneNumber}
+                disabled={loading}
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {(formData.phone_numbers || ['']).map((phone, index) => (
+                <div key={index} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="tel"
+                      placeholder={index === 0 ? 'Primary phone number' : 'Additional phone'}
+                      value={phone}
+                      onChange={(e) => updatePhoneNumber(index, e.target.value)}
+                      disabled={loading}
+                      className="pl-9"
+                    />
+                  </div>
+                  {(formData.phone_numbers?.length || 0) > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removePhoneNumber(index)}
+                      disabled={loading}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="md:col-span-2 space-y-2">

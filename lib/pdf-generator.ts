@@ -12,31 +12,21 @@ export interface PatientData {
   medical_record_number?: string
   email?: string
   phone?: string
+  phone_numbers?: string[]
   date_of_birth?: string
   gender?: string
   address?: string
-  allergies?: string
-  current_medications?: string
-  medical_conditions?: string
-  blood_type?: string
-  insurance_provider?: string
-  insurance_number?: string
+  city?: string
+  state?: string
+  postal_code?: string
+  emergency_contact_name?: string
+  emergency_contact_phone?: string
+  notes?: string
 }
 
 export interface MedicalRecord {
   visit_date: string
-  visit_type?: string
-  chief_complaint?: string
-  diagnosis?: string
-  treatment_plan?: string
-  medications_prescribed?: string
-  vitals?: {
-    temperature?: number
-    blood_pressure?: string
-    heart_rate?: number
-    weight?: number
-    height?: number
-  }
+  notes?: string
 }
 
 export function generatePatientListPDF(
@@ -351,9 +341,24 @@ export function generatePatientRecordPDF(
         <div class="mrn">MRN: ${patient.medical_record_number || 'Not Assigned'}</div>
       </div>
 
-      <!-- Patient Information -->
+      <!-- Basic Information -->
       <div class="section">
-        <div class="section-title">Patient Information</div>
+        <div class="section-title">Basic Information</div>
+        <div class="info-grid">
+          <div class="info-item">
+            <div class="info-label">Date of Birth</div>
+            <div class="info-value">${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'N/A'}</div>
+          </div>
+          <div class="info-item">
+            <div class="info-label">Gender</div>
+            <div class="info-value">${patient.gender ? patient.gender.charAt(0).toUpperCase() + patient.gender.slice(1).replace('_', ' ') : 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="section">
+        <div class="section-title">Contact Information</div>
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">Email</div>
@@ -361,49 +366,39 @@ export function generatePatientRecordPDF(
           </div>
           <div class="info-item">
             <div class="info-label">Phone</div>
-            <div class="info-value">${patient.phone || 'N/A'}</div>
+            <div class="info-value">${patient.phone_numbers && patient.phone_numbers.length > 0 ? patient.phone_numbers.join(', ') : patient.phone || 'N/A'}</div>
           </div>
-          <div class="info-item">
-            <div class="info-label">Date of Birth</div>
-            <div class="info-value">${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'N/A'}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Gender</div>
-            <div class="info-value">${patient.gender || 'N/A'}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Blood Type</div>
-            <div class="info-value">${patient.blood_type || 'N/A'}</div>
-          </div>
-          <div class="info-item">
-            <div class="info-label">Insurance</div>
-            <div class="info-value">${patient.insurance_provider || 'N/A'}</div>
+          <div class="info-item" style="grid-column: span 2;">
+            <div class="info-label">Address</div>
+            <div class="info-value">${[patient.address, patient.city, patient.state, patient.postal_code].filter(Boolean).join(', ') || 'N/A'}</div>
           </div>
         </div>
       </div>
 
-      <!-- Medical History -->
-      ${patient.allergies || patient.current_medications || patient.medical_conditions ? `
+      <!-- Emergency Contact -->
+      ${patient.emergency_contact_name || patient.emergency_contact_phone ? `
         <div class="section">
-          <div class="section-title">Medical History</div>
-          ${patient.allergies ? `
-            <div class="alert-box">
-              <div class="alert-title">Allergies</div>
-              <div>${patient.allergies}</div>
-            </div>
-          ` : ''}
-          ${patient.current_medications ? `
-            <div class="info-item" style="margin-bottom: 10px;">
-              <div class="info-label">Current Medications</div>
-              <div class="info-value">${patient.current_medications}</div>
-            </div>
-          ` : ''}
-          ${patient.medical_conditions ? `
+          <div class="section-title">Emergency Contact</div>
+          <div class="info-grid">
             <div class="info-item">
-              <div class="info-label">Medical Conditions</div>
-              <div class="info-value">${patient.medical_conditions}</div>
+              <div class="info-label">Contact Name</div>
+              <div class="info-value">${patient.emergency_contact_name || 'N/A'}</div>
             </div>
-          ` : ''}
+            <div class="info-item">
+              <div class="info-label">Contact Phone</div>
+              <div class="info-value">${patient.emergency_contact_phone || 'N/A'}</div>
+            </div>
+          </div>
+        </div>
+      ` : ''}
+
+      <!-- Notes -->
+      ${patient.notes ? `
+        <div class="section">
+          <div class="section-title">Notes</div>
+          <div class="info-item">
+            <div class="info-value">${patient.notes}</div>
+          </div>
         </div>
       ` : ''}
 
@@ -411,36 +406,26 @@ export function generatePatientRecordPDF(
       ${medicalRecords.length > 0 ? `
         <div class="section">
           <div class="section-title">Medical Records (${medicalRecords.length} visits)</div>
-          ${medicalRecords.map(record => `
+          ${medicalRecords.map(record => {
+            const notePreview = record.notes
+              ?.replace(/<[^>]*>/g, '')
+              .replace(/&nbsp;/g, ' ')
+              .trim() || ''
+            return `
             <div class="medical-record">
               <div class="record-header">
                 <div class="record-date">${new Date(record.visit_date).toLocaleDateString()}</div>
-                <div class="record-type">${record.visit_type || 'Visit'}</div>
+                <div class="record-type">Visit</div>
               </div>
               <div class="record-content">
-                ${record.chief_complaint ? `
+                ${notePreview ? `
                   <div class="record-section">
-                    <strong>Chief Complaint:</strong> ${record.chief_complaint}
+                    ${notePreview}
                   </div>
-                ` : ''}
-                ${record.diagnosis ? `
-                  <div class="record-section">
-                    <strong>Diagnosis:</strong> ${record.diagnosis}
-                  </div>
-                ` : ''}
-                ${record.treatment_plan ? `
-                  <div class="record-section">
-                    <strong>Treatment Plan:</strong> ${record.treatment_plan}
-                  </div>
-                ` : ''}
-                ${record.medications_prescribed ? `
-                  <div class="record-section">
-                    <strong>Medications:</strong> ${record.medications_prescribed}
-                  </div>
-                ` : ''}
+                ` : '<div class="record-section" style="color: #9ca3af;">No notes recorded</div>'}
               </div>
             </div>
-          `).join('')}
+          `}).join('')}
         </div>
       ` : ''}
 

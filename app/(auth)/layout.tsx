@@ -1,6 +1,3 @@
-import { Shield } from 'lucide-react'
-import Link from 'next/link'
-
 export default function AuthLayout({
   children,
 }: {
@@ -8,38 +5,25 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden">
-      {/* Animated gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-sky-50 to-slate-50 dark:from-gray-900 dark:via-blue-950 dark:to-slate-950">
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
+      {/* Soft gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-50 via-pink-50/30 to-orange-50/40 dark:from-fuchsia-950/40 dark:via-gray-950 dark:to-orange-950/20">
+        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center opacity-30 [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
       </div>
 
-      {/* Floating orbs for visual interest */}
-      <div className="absolute top-20 left-20 h-72 w-72 rounded-full bg-blue-400 opacity-20 blur-3xl animate-pulse"></div>
-      <div className="absolute bottom-20 right-20 h-96 w-96 rounded-full bg-sky-400 opacity-20 blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-
-      {/* Header */}
-      <header className="relative z-10 border-b border-white/20 backdrop-blur-sm bg-white/30 dark:bg-gray-900/30">
-        <div className="container flex h-16 items-center px-4">
-          <Link href="/login" className="flex items-center gap-2 transition-transform hover:scale-105">
-            <div className="rounded-lg bg-gradient-to-br from-blue-600 to-blue-800 p-1.5">
-              <Shield className="h-5 w-5 text-white" />
-            </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-              MediCore
-            </span>
-          </Link>
-        </div>
-      </header>
+      {/* Decorative elements - static for better performance */}
+      <div className="absolute top-10 left-10 h-64 w-64 rounded-full bg-gradient-to-br from-fuchsia-400/15 to-pink-400/15 blur-3xl"></div>
+      <div className="absolute bottom-20 right-10 h-80 w-80 rounded-full bg-gradient-to-br from-orange-300/15 to-yellow-300/15 blur-3xl"></div>
+      <div className="absolute top-1/2 left-1/4 h-40 w-40 rounded-full bg-gradient-to-br from-green-300/10 to-emerald-300/10 blur-3xl"></div>
 
       {/* Main content */}
-      <main className="relative z-10 flex flex-1 items-center justify-center p-4">
+      <main className="relative z-10 flex flex-1 items-center justify-center p-6">
         {children}
       </main>
 
-      {/* Footer accent */}
-      <div className="relative z-10 py-4">
-        <p className="text-center text-sm text-muted-foreground">
-          Secure healthcare form management
+      {/* Footer */}
+      <div className="relative z-10 py-6">
+        <p className="text-center text-sm text-fuchsia-700/60 dark:text-fuchsia-400/60 font-medium">
+          Quality dental care with modern technology
         </p>
       </div>
     </div>

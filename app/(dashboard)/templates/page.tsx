@@ -19,7 +19,7 @@ const categoryColors = {
   examination: 'bg-blue-100 text-blue-600 dark:bg-blue-950/20 dark:text-blue-400',
   treatment: 'bg-green-100 text-green-600 dark:bg-green-950/20 dark:text-green-400',
   emergency: 'bg-red-100 text-red-600 dark:bg-red-950/20 dark:text-red-400',
-  orthodontics: 'bg-purple-100 text-purple-600 dark:bg-purple-950/20 dark:text-purple-400',
+  orthodontics: 'bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-950/20 dark:text-fuchsia-400',
   hygiene: 'bg-teal-100 text-teal-600 dark:bg-teal-950/20 dark:text-teal-400',
 }
 
@@ -39,19 +39,19 @@ export default async function TemplatesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">
           Dental Form Templates
         </h2>
-        <p className="text-muted-foreground mt-1">
+        <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70 mt-1">
           Pre-built dental forms you can use and customize
         </p>
       </div>
 
       {/* Header Card */}
-      <Card className="border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20">
+      <Card className="border-fuchsia-200 dark:border-fuchsia-900/50 bg-gradient-to-r from-fuchsia-50/50 to-orange-50/30 dark:from-fuchsia-950/20 dark:to-orange-950/10">
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
-            <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">
+            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-fuchsia-600 to-fuchsia-700 flex items-center justify-center flex-shrink-0 shadow-lg shadow-fuchsia-500/25">
               <FileText className="h-6 w-6 text-white" />
             </div>
             <div className="flex-1">
@@ -115,7 +115,7 @@ export default async function TemplatesPage() {
                   </div>
 
                   <Link href={`/templates/${template.id}`}>
-                    <button className="w-full text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    <button className="w-full text-sm text-fuchsia-600 hover:text-fuchsia-700 font-medium">
                       Preview Template →
                     </button>
                   </Link>

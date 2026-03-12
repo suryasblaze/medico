@@ -29,8 +29,8 @@ export default async function FormsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight">Forms</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">Forms</h2>
+          <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70">
             Create and manage custom forms for your patients
           </p>
         </div>

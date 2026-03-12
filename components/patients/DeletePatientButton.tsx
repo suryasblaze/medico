@@ -43,8 +43,8 @@ export function DeletePatientButton({
       if (error) throw error
 
       setOpen(false)
-      router.push('/patients')
-      router.refresh()
+      // Navigate and force refresh
+      window.location.href = '/patients'
     } catch (err: any) {
       setError(err.message || 'Failed to delete patient')
     } finally {

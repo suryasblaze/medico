@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Shield, Sparkles } from 'lucide-react'
+import { Sparkles } from 'lucide-react'
 import { navigationItems } from '@/lib/constants/navigation'
 import { cn } from '@/lib/utils/cn'
 
@@ -10,20 +11,18 @@ export function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <div className="flex h-full w-64 flex-col bg-gradient-to-b from-white to-gray-50/50 dark:from-gray-950 dark:to-gray-900/50 border-r border-gray-200 dark:border-gray-800 shadow-sm">
+    <div className="flex h-full w-64 flex-col bg-gradient-to-b from-white via-fuchsia-50/30 to-white dark:from-gray-950 dark:via-fuchsia-950/20 dark:to-gray-950 border-r border-fuchsia-100 dark:border-fuchsia-900/30 shadow-sm">
       {/* Logo */}
-      <div className="flex h-16 items-center px-6 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-950/80 backdrop-blur-sm">
-        <Link href="/dashboard" className="flex items-center gap-2.5 group">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg shadow-blue-500/25 group-hover:shadow-blue-500/40 transition-all group-hover:scale-105">
-            <Shield className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
-              MediCore
-            </span>
-            <span className="text-[10px] text-gray-500 dark:text-gray-400 -mt-0.5">
-              Healthcare Platform
-            </span>
+      <div className="flex h-20 items-center justify-center px-4 border-b border-fuchsia-100 dark:border-fuchsia-900/30 bg-white/90 dark:bg-gray-950/90 backdrop-blur-sm">
+        <Link href="/dashboard" className="group transition-transform duration-150 hover:scale-105">
+          <div className="relative h-14 w-48">
+            <Image
+              src="/logo.png"
+              alt="VR Dental Care"
+              fill
+              priority
+              className="object-contain"
+            />
           </div>
         </Link>
       </div>
@@ -40,26 +39,21 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'group flex flex-col gap-0.5 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-200',
+                  'group flex flex-col gap-0.5 rounded-xl px-3.5 py-3 text-sm font-medium transition-all duration-150',
                   isActive
-                    ? 'bg-gradient-to-r from-blue-50 to-blue-50/50 dark:from-blue-950/30 dark:to-blue-900/20 text-blue-700 dark:text-blue-400 shadow-sm border border-blue-100 dark:border-blue-900/50'
-                    : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100/80 dark:hover:bg-gray-800/50 hover:shadow-sm hover:scale-[1.02]'
+                    ? 'bg-gradient-to-r from-fuchsia-100 to-fuchsia-50 dark:from-fuchsia-950/50 dark:to-fuchsia-900/30 text-fuchsia-700 dark:text-fuchsia-300 shadow-sm border border-fuchsia-200/50 dark:border-fuchsia-800/50'
+                    : 'text-gray-700 dark:text-gray-300 hover:bg-fuchsia-50/80 dark:hover:bg-fuchsia-950/30 hover:shadow-sm hover:scale-[1.02]'
                 )}
                 title={item.description}
               >
                 <div className="flex items-center gap-3">
                   <Icon className={cn(
                     "h-5 w-5 transition-transform group-hover:scale-110",
-                    isActive && "text-blue-600 dark:text-blue-400"
+                    isActive ? "text-fuchsia-600 dark:text-fuchsia-400" : "text-gray-500 dark:text-gray-400"
                   )} />
                   <span className="font-semibold">{item.title}</span>
-                  {item.badge && (
-                    <span className="ml-auto text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400">
-                      {item.badge}
-                    </span>
-                  )}
-                  {isActive && !item.badge && (
-                    <Sparkles className="ml-auto h-3.5 w-3.5 text-blue-500 animate-pulse" />
+                  {isActive && (
+                    <Sparkles className="ml-auto h-3.5 w-3.5 text-orange-500" />
                   )}
                 </div>
                 {item.description && (
@@ -73,6 +67,13 @@ export function Sidebar() {
         </nav>
       </div>
 
+      {/* Footer branding */}
+      <div className="p-4 border-t border-fuchsia-100 dark:border-fuchsia-900/30">
+        <div className="flex items-center gap-2 text-[10px] text-fuchsia-500/60 dark:text-fuchsia-400/50">
+          <div className="h-2 w-2 rounded-full bg-green-500"></div>
+          <span>System Online</span>
+        </div>
+      </div>
     </div>
   )
 }

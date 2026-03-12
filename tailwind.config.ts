@@ -52,6 +52,12 @@ const config = {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        // VR Dental Care brand colors (exact logo colors)
+        brand: {
+          magenta: '#A8217D',
+          orange: '#F5841F',
+          green: '#7AB942',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

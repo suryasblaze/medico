@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentDoctor } from '@/lib/supabase/queries'
 import { headers } from 'next/headers'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -7,21 +8,14 @@ import { Share2, Users, Calendar, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
 
 export default async function IntakeFormsPage() {
+  // Use cached doctor - already fetched in layout
+  const doctor = await getCurrentDoctor()
   const supabase = createClient()
+
   const headersList = headers()
   const host = headersList.get('host') || 'localhost:3000'
   const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
   const baseUrl = `${protocol}://${host}`
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: doctor } = await supabase
-    .from('doctors')
-    .select('id')
-    .eq('user_id', user?.id)
-    .maybeSingle()
 
   // Generate shareable link
   const intakeUrl = `${baseUrl}/intake/${doctor?.id}`
@@ -55,17 +49,17 @@ export default async function IntakeFormsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Patient Intake Form</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">Patient Intake Form</h2>
+        <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70">
           Share this link with new patients to automatically create their records
         </p>
       </div>
 
       {/* Shareable Link Card */}
-      <Card className="border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20">
+      <Card className="border-fuchsia-200 dark:border-fuchsia-900/50 bg-gradient-to-r from-fuchsia-50/50 to-orange-50/30 dark:from-fuchsia-950/20 dark:to-orange-950/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Share2 className="h-5 w-5 text-blue-600" />
+            <Share2 className="h-5 w-5 text-fuchsia-600" />
             Your Intake Form Link
           </CardTitle>
           <CardDescription>
@@ -82,17 +76,17 @@ export default async function IntakeFormsPage() {
             </div>
 
             <div className="grid grid-cols-3 gap-4 pt-4">
-              <div className="text-center p-3 bg-white dark:bg-gray-950 rounded-lg border">
-                <div className="text-2xl font-bold text-blue-600">{todayCount || 0}</div>
-                <div className="text-xs text-muted-foreground mt-1">New Today</div>
+              <div className="text-center p-3 bg-white dark:bg-gray-950 rounded-xl border border-fuchsia-100 dark:border-fuchsia-900/30">
+                <div className="text-2xl font-bold text-fuchsia-600">{todayCount || 0}</div>
+                <div className="text-xs text-fuchsia-600/70 dark:text-fuchsia-400/70 mt-1">New Today</div>
               </div>
-              <div className="text-center p-3 bg-white dark:bg-gray-950 rounded-lg border">
+              <div className="text-center p-3 bg-white dark:bg-gray-950 rounded-xl border border-fuchsia-100 dark:border-fuchsia-900/30">
                 <div className="text-2xl font-bold text-green-600">{weekCount || 0}</div>
-                <div className="text-xs text-muted-foreground mt-1">This Week</div>
+                <div className="text-xs text-fuchsia-600/70 dark:text-fuchsia-400/70 mt-1">This Week</div>
               </div>
-              <div className="text-center p-3 bg-white dark:bg-gray-950 rounded-lg border">
-                <div className="text-2xl font-bold text-purple-600">{recentPatients?.length || 0}</div>
-                <div className="text-xs text-muted-foreground mt-1">Recent</div>
+              <div className="text-center p-3 bg-white dark:bg-gray-950 rounded-xl border border-fuchsia-100 dark:border-fuchsia-900/30">
+                <div className="text-2xl font-bold text-orange-500">{recentPatients?.length || 0}</div>
+                <div className="text-xs text-fuchsia-600/70 dark:text-fuchsia-400/70 mt-1">Recent</div>
               </div>
             </div>
           </div>
@@ -107,8 +101,8 @@ export default async function IntakeFormsPage() {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-4">
-            <div className="flex flex-col items-center text-center p-4 bg-blue-50 dark:bg-blue-950/10 rounded-lg">
-              <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold mb-3">
+            <div className="flex flex-col items-center text-center p-4 bg-fuchsia-50 dark:bg-fuchsia-950/20 rounded-xl">
+              <div className="h-10 w-10 rounded-full bg-fuchsia-600 text-white flex items-center justify-center font-bold mb-3">
                 1
               </div>
               <h4 className="font-semibold mb-2">Share Link</h4>
@@ -117,7 +111,7 @@ export default async function IntakeFormsPage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-4 bg-green-50 dark:bg-green-950/10 rounded-lg">
+            <div className="flex flex-col items-center text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-xl">
               <div className="h-10 w-10 rounded-full bg-green-600 text-white flex items-center justify-center font-bold mb-3">
                 2
               </div>
@@ -127,8 +121,8 @@ export default async function IntakeFormsPage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-4 bg-purple-50 dark:bg-purple-950/10 rounded-lg">
-              <div className="h-10 w-10 rounded-full bg-purple-600 text-white flex items-center justify-center font-bold mb-3">
+            <div className="flex flex-col items-center text-center p-4 bg-fuchsia-50 dark:bg-fuchsia-950/20 rounded-xl">
+              <div className="h-10 w-10 rounded-full bg-fuchsia-700 text-white flex items-center justify-center font-bold mb-3">
                 3
               </div>
               <h4 className="font-semibold mb-2">Auto-Created</h4>
@@ -137,8 +131,8 @@ export default async function IntakeFormsPage() {
               </p>
             </div>
 
-            <div className="flex flex-col items-center text-center p-4 bg-orange-50 dark:bg-orange-950/10 rounded-lg">
-              <div className="h-10 w-10 rounded-full bg-orange-600 text-white flex items-center justify-center font-bold mb-3">
+            <div className="flex flex-col items-center text-center p-4 bg-orange-50 dark:bg-orange-950/20 rounded-xl">
+              <div className="h-10 w-10 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold mb-3">
                 4
               </div>
               <h4 className="font-semibold mb-2">Ready to Use</h4>
@@ -155,7 +149,7 @@ export default async function IntakeFormsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5 text-blue-600" />
+              <Users className="h-5 w-5 text-fuchsia-600" />
               Recent Patients
             </CardTitle>
             <CardDescription>Last 10 patients added to your practice</CardDescription>

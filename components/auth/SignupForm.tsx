@@ -54,16 +54,16 @@ export function SignupForm() {
     <form onSubmit={handleSubmit} className="space-y-4">
       {/* Full Name field */}
       <div className="space-y-2">
-        <Label htmlFor="fullName" className="text-sm font-medium">
+        <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Full Name
         </Label>
         <div className="relative">
-          <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <User className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-fuchsia-400" />
           <Input
             id="fullName"
             type="text"
             placeholder="Dr. John Doe"
-            className="pl-10 bg-white/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="pl-11 h-12 rounded-xl bg-fuchsia-50/50 dark:bg-fuchsia-950/20 border-fuchsia-200 dark:border-fuchsia-800 focus:ring-2 focus:ring-fuchsia-500/30 focus:border-fuchsia-400 transition-all"
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
@@ -74,16 +74,16 @@ export function SignupForm() {
 
       {/* Email field */}
       <div className="space-y-2">
-        <Label htmlFor="email" className="text-sm font-medium">
+        <Label htmlFor="email" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Email address
         </Label>
         <div className="relative">
-          <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Mail className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-fuchsia-400" />
           <Input
             id="email"
             type="email"
-            placeholder="doctor@example.com"
-            className="pl-10 bg-white/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            placeholder="doctor@vrdentalcare.com"
+            className="pl-11 h-12 rounded-xl bg-fuchsia-50/50 dark:bg-fuchsia-950/20 border-fuchsia-200 dark:border-fuchsia-800 focus:ring-2 focus:ring-fuchsia-500/30 focus:border-fuchsia-400 transition-all"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -94,16 +94,16 @@ export function SignupForm() {
 
       {/* Clinic Name field */}
       <div className="space-y-2">
-        <Label htmlFor="clinicName" className="text-sm font-medium">
-          Clinic Name <span className="text-muted-foreground">(Optional)</span>
+        <Label htmlFor="clinicName" className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          Clinic Name <span className="text-fuchsia-500/60">(Optional)</span>
         </Label>
         <div className="relative">
-          <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Building2 className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-fuchsia-400" />
           <Input
             id="clinicName"
             type="text"
-            placeholder="City Medical Center"
-            className="pl-10 bg-white/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            placeholder="VR Dental Care"
+            className="pl-11 h-12 rounded-xl bg-fuchsia-50/50 dark:bg-fuchsia-950/20 border-fuchsia-200 dark:border-fuchsia-800 focus:ring-2 focus:ring-fuchsia-500/30 focus:border-fuchsia-400 transition-all"
             value={clinicName}
             onChange={(e) => setClinicName(e.target.value)}
             disabled={loading}
@@ -113,16 +113,16 @@ export function SignupForm() {
 
       {/* Password field */}
       <div className="space-y-2">
-        <Label htmlFor="password" className="text-sm font-medium">
+        <Label htmlFor="password" className="text-sm font-medium text-gray-700 dark:text-gray-300">
           Password
         </Label>
         <div className="relative">
-          <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Lock className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-fuchsia-400" />
           <Input
             id="password"
             type="password"
             placeholder="Create a strong password"
-            className="pl-10 bg-white/50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-800 focus:ring-2 focus:ring-blue-500/20 transition-all"
+            className="pl-11 h-12 rounded-xl bg-fuchsia-50/50 dark:bg-fuchsia-950/20 border-fuchsia-200 dark:border-fuchsia-800 focus:ring-2 focus:ring-fuchsia-500/30 focus:border-fuchsia-400 transition-all"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
@@ -130,15 +130,15 @@ export function SignupForm() {
             minLength={6}
           />
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-xs text-fuchsia-600/60 dark:text-fuchsia-400/60">
           Must be at least 6 characters long
         </p>
       </div>
 
       {/* Error message */}
       {error && (
-        <div className="flex items-start gap-2 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/50 p-3 text-sm text-red-600 dark:text-red-400">
-          <AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
+        <div className="flex items-start gap-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900/50 p-4 text-sm text-red-600 dark:text-red-400">
+          <AlertCircle className="h-5 w-5 mt-0.5 flex-shrink-0" />
           <span>{error}</span>
         </div>
       )}
@@ -146,12 +146,12 @@ export function SignupForm() {
       {/* Submit button */}
       <Button
         type="submit"
-        className="w-full bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white shadow-lg shadow-blue-500/25 transition-all duration-200 hover:shadow-xl hover:shadow-blue-500/30"
+        className="w-full h-12 rounded-xl bg-gradient-to-r from-fuchsia-600 via-fuchsia-700 to-fuchsia-800 hover:from-fuchsia-700 hover:via-fuchsia-800 hover:to-fuchsia-900 text-white font-semibold shadow-lg shadow-fuchsia-500/30 transition-all duration-300 hover:shadow-xl hover:shadow-fuchsia-500/40 hover:scale-[1.02]"
         disabled={loading}
       >
         {loading ? (
           <div className="flex items-center gap-2">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
             <span>Creating account...</span>
           </div>
         ) : (
@@ -160,13 +160,13 @@ export function SignupForm() {
       </Button>
 
       {/* Terms text */}
-      <p className="text-xs text-center text-muted-foreground">
+      <p className="text-xs text-center text-fuchsia-600/60 dark:text-fuchsia-400/60">
         By creating an account, you agree to our{' '}
-        <button type="button" className="text-blue-600 hover:underline dark:text-blue-400">
+        <button type="button" className="text-orange-500 hover:underline">
           Terms of Service
         </button>{' '}
         and{' '}
-        <button type="button" className="text-blue-600 hover:underline dark:text-blue-400">
+        <button type="button" className="text-orange-500 hover:underline">
           Privacy Policy
         </button>
       </p>

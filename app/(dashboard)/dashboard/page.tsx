@@ -1,21 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentDoctor } from '@/lib/supabase/queries'
 import { StatsCard } from '@/components/dashboard/StatsCard'
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts'
 import { Activity, Users, Calendar, TrendingUp } from 'lucide-react'
 
 export default async function DashboardPage() {
+  // Use cached doctor - already fetched in layout
+  const doctor = await getCurrentDoctor()
   const supabase = createClient()
-
-  // Get user and doctor info
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: doctor } = await supabase
-    .from('doctors')
-    .select('id, full_name')
-    .eq('user_id', user?.id)
-    .maybeSingle()
 
   // Fetch only necessary data for dashboard - optimized queries
   const now = new Date()
@@ -106,13 +98,33 @@ export default async function DashboardPage() {
     { name: 'Procedure', value: recentRecords?.filter(r => r.visit_type === 'procedure').length || 0 },
   ].filter(v => v.value > 0)
 
+  // Weekly activity - visits by day of week (from recent records)
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const weeklyActivity = dayNames.map((day, dayIndex) => {
+    const visitsOnDay = recentRecords?.filter(r => {
+      const recordDate = new Date(r.visit_date)
+      return recordDate.getDay() === dayIndex
+    }).length || 0
+    return { day, visits: visitsOnDay }
+  })
+  // Reorder to start from Monday
+  const weeklyActivityOrdered = [
+    weeklyActivity[1], // Mon
+    weeklyActivity[2], // Tue
+    weeklyActivity[3], // Wed
+    weeklyActivity[4], // Thu
+    weeklyActivity[5], // Fri
+    weeklyActivity[6], // Sat
+    weeklyActivity[0], // Sun
+  ]
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">
           Dashboard
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-sm text-fuchsia-600/70 dark:text-fuchsia-400/70">
           Welcome back, Dr. {doctor?.full_name}
         </p>
       </div>
@@ -150,6 +162,7 @@ export default async function DashboardPage() {
         visitData={visitData}
         patientGrowth={patientGrowth}
         visitTypes={visitTypes}
+        weeklyActivity={weeklyActivityOrdered}
       />
     </div>
   )

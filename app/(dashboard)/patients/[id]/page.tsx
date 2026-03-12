@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentDoctor } from '@/lib/supabase/queries'
 import { redirect, notFound } from 'next/navigation'
 import { PatientDetailTabs } from '@/components/patients/PatientDetailTabs'
 import { DownloadPatientPDF } from '@/components/patients/DownloadPatientPDF'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, User, Activity, FileText } from 'lucide-react'
+import { ArrowLeft, User, Activity, FileText, FolderOpen } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { DeletePatientButton } from '@/components/patients/DeletePatientButton'
@@ -14,22 +15,9 @@ export default async function PatientDetailPage({
 }: {
   params: { id: string }
 }) {
+  // Use cached doctor - already fetched in layout
+  const doctor = await getCurrentDoctor()
   const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  // Get doctor profile
-  const { data: doctor } = await supabase
-    .from('doctors')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
 
   if (!doctor) {
     redirect('/login')
@@ -54,6 +42,13 @@ export default async function PatientDetailPage({
     .eq('patient_id', patient.id)
     .order('visit_date', { ascending: false })
 
+  // Fetch patient documents
+  const { data: documents } = await supabase
+    .from('patient_documents')
+    .select('*')
+    .eq('patient_id', patient.id)
+    .order('uploaded_at', { ascending: false })
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -74,8 +69,16 @@ export default async function PatientDetailPage({
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-900">
         <CardContent className="pt-6">
           <div className="flex items-start gap-6">
-            <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
-              {patient.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()}
+            <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 overflow-hidden">
+              {patient.avatar_url ? (
+                <img
+                  src={patient.avatar_url}
+                  alt={patient.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                patient.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
+              )}
             </div>
             <div className="flex-1">
               <div className="flex items-start justify-between">
@@ -97,7 +100,7 @@ export default async function PatientDetailPage({
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-6 mt-6">
+              <div className="grid grid-cols-4 gap-6 mt-6">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-950/20 flex items-center justify-center">
                     <Activity className="h-5 w-5 text-blue-600" />
@@ -110,7 +113,17 @@ export default async function PatientDetailPage({
 
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-950/20 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-green-600" />
+                    <FolderOpen className="h-5 w-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">{documents?.length || 0}</p>
+                    <p className="text-xs text-muted-foreground">Documents</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-950/20 flex items-center justify-center">
+                    <FileText className="h-5 w-5 text-orange-600" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">
@@ -121,8 +134,8 @@ export default async function PatientDetailPage({
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-purple-100 dark:bg-purple-950/20 flex items-center justify-center">
-                    <User className="h-5 w-5 text-purple-600" />
+                  <div className="h-10 w-10 rounded-lg bg-fuchsia-100 dark:bg-fuchsia-950/20 flex items-center justify-center">
+                    <User className="h-5 w-5 text-fuchsia-600" />
                   </div>
                   <div>
                     <p className="text-2xl font-bold">
@@ -142,6 +155,7 @@ export default async function PatientDetailPage({
         patient={patient}
         doctorId={doctor.id}
         medicalRecords={medicalRecords || []}
+        documents={documents || []}
       />
     </div>
   )

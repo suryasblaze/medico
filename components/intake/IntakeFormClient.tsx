@@ -5,8 +5,15 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle, Loader2 } from 'lucide-react'
+import { CheckCircle, Loader2, Phone, Plus, X } from 'lucide-react'
 
 interface IntakeFormClientProps {
   doctorId: string
@@ -15,6 +22,7 @@ interface IntakeFormClientProps {
 export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [phoneNumbers, setPhoneNumbers] = useState([''])
   const [formData, setFormData] = useState({
     full_name: '',
     date_of_birth: '',
@@ -22,21 +30,36 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
     email: '',
     phone: '',
     address: '',
+    city: '',
+    state: '',
+    postal_code: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
-    allergies: '',
-    current_medications: '',
-    medical_conditions: '',
-    insurance_provider: '',
-    insurance_number: '',
-    reason_for_visit: '',
+    notes: '',
   })
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     })
+  }
+
+  const addPhoneNumber = () => {
+    setPhoneNumbers([...phoneNumbers, ''])
+  }
+
+  const removePhoneNumber = (index: number) => {
+    const newPhones = [...phoneNumbers]
+    newPhones.splice(index, 1)
+    setPhoneNumbers(newPhones.length ? newPhones : [''])
+  }
+
+  const updatePhoneNumber = (index: number, value: string) => {
+    const newPhones = [...phoneNumbers]
+    newPhones[index] = value
+    setPhoneNumbers(newPhones)
+    setFormData({ ...formData, phone: newPhones[0] || '' })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +69,7 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
     try {
       const supabase = createClient()
 
-      // Directly create patient record (no review needed)
+      // Directly create patient record
       const { error } = await supabase
         .from('patients')
         .insert({
@@ -55,15 +78,15 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
           date_of_birth: formData.date_of_birth,
           gender: formData.gender,
           email: formData.email,
-          phone: formData.phone,
+          phone: phoneNumbers[0] || formData.phone,
+          phone_numbers: phoneNumbers.filter(p => p),
           address: formData.address,
+          city: formData.city,
+          state: formData.state,
+          postal_code: formData.postal_code,
           emergency_contact_name: formData.emergency_contact_name,
           emergency_contact_phone: formData.emergency_contact_phone,
-          allergies: formData.allergies,
-          current_medications: formData.current_medications,
-          medical_conditions: formData.medical_conditions,
-          insurance_provider: formData.insurance_provider,
-          insurance_number: formData.insurance_number,
+          notes: formData.notes,
         })
 
       if (error) throw error
@@ -80,14 +103,14 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
   if (submitted) {
     return (
       <div className="text-center py-12">
-        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-950/20 mb-4">
+        <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-green-100 dark:bg-green-950/30 mb-4">
           <CheckCircle className="h-8 w-8 text-green-600" />
         </div>
-        <h3 className="text-2xl font-bold mb-2">Form Submitted Successfully!</h3>
-        <p className="text-muted-foreground mb-4">
-          Thank you for submitting your information. Your doctor will review it shortly.
+        <h3 className="text-2xl font-bold mb-2 text-fuchsia-800 dark:text-fuchsia-200">Form Submitted Successfully!</h3>
+        <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70 mb-4">
+          Thank you for submitting your information. Your dental care provider will review it shortly.
         </p>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-fuchsia-600/60 dark:text-fuchsia-400/50">
           You will be contacted to schedule your appointment.
         </p>
       </div>
@@ -96,13 +119,17 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Personal Information */}
+      {/* Basic Information */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Personal Information</h3>
+        <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
+          Basic Information
+        </h3>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="full_name">Full Name *</Label>
+            <Label htmlFor="full_name" className="text-fuchsia-700 dark:text-fuchsia-300">
+              Full Name <span className="text-orange-500">*</span>
+            </Label>
             <Input
               id="full_name"
               name="full_name"
@@ -110,11 +137,14 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
               onChange={handleChange}
               required
               placeholder="John Doe"
+              disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="date_of_birth">Date of Birth *</Label>
+            <Label htmlFor="date_of_birth" className="text-fuchsia-700 dark:text-fuchsia-300">
+              Date of Birth <span className="text-orange-500">*</span>
+            </Label>
             <Input
               id="date_of_birth"
               name="date_of_birth"
@@ -122,28 +152,35 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
               value={formData.date_of_birth}
               onChange={handleChange}
               required
+              disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="gender">Gender *</Label>
-            <select
-              id="gender"
-              name="gender"
+            <Label htmlFor="gender" className="text-fuchsia-700 dark:text-fuchsia-300">
+              Gender <span className="text-orange-500">*</span>
+            </Label>
+            <Select
               value={formData.gender}
-              onChange={handleChange}
-              required
-              className="w-full p-2 border border-gray-200 dark:border-gray-800 rounded-md bg-white dark:bg-gray-950 text-sm"
+              onValueChange={(value) => setFormData({ ...formData, gender: value })}
+              disabled={loading}
             >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="other">Other</option>
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="email" className="text-fuchsia-700 dark:text-fuchsia-300">
+              Email <span className="text-orange-500">*</span>
+            </Label>
             <Input
               id="email"
               name="email"
@@ -152,30 +189,113 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
               onChange={handleChange}
               required
               placeholder="john@example.com"
+              disabled={loading}
             />
           </div>
+        </div>
+      </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone Number *</Label>
-            <Input
-              id="phone"
-              name="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={handleChange}
-              required
-              placeholder="+1 (555) 123-4567"
-            />
+      {/* Contact Information */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
+          Contact Information
+        </h3>
+
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="md:col-span-2 space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-fuchsia-700 dark:text-fuchsia-300">
+                Phone Numbers <span className="text-orange-500">*</span>
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={addPhoneNumber}
+                disabled={loading}
+                className="border-fuchsia-200 dark:border-fuchsia-800 hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/30"
+              >
+                <Plus className="h-3 w-3 mr-1" />
+                Add
+              </Button>
+            </div>
+            <div className="space-y-2">
+              {phoneNumbers.map((phone, index) => (
+                <div key={index} className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fuchsia-400" />
+                    <Input
+                      type="tel"
+                      placeholder={index === 0 ? 'Primary phone number' : 'Additional phone'}
+                      value={phone}
+                      onChange={(e) => updatePhoneNumber(index, e.target.value)}
+                      disabled={loading}
+                      required={index === 0}
+                      className="pl-9"
+                    />
+                  </div>
+                  {phoneNumbers.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => removePhoneNumber(index)}
+                      disabled={loading}
+                      className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="space-y-2 md:col-span-2">
-            <Label htmlFor="address">Address</Label>
+          <div className="md:col-span-2 space-y-2">
+            <Label htmlFor="address" className="text-fuchsia-700 dark:text-fuchsia-300">Address</Label>
             <Input
               id="address"
               name="address"
               value={formData.address}
               onChange={handleChange}
-              placeholder="123 Main St, City, State, ZIP"
+              placeholder="Street address"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="city" className="text-fuchsia-700 dark:text-fuchsia-300">City</Label>
+            <Input
+              id="city"
+              name="city"
+              value={formData.city}
+              onChange={handleChange}
+              placeholder="City"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="state" className="text-fuchsia-700 dark:text-fuchsia-300">State</Label>
+            <Input
+              id="state"
+              name="state"
+              value={formData.state}
+              onChange={handleChange}
+              placeholder="State"
+              disabled={loading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="postal_code" className="text-fuchsia-700 dark:text-fuchsia-300">Postal Code</Label>
+            <Input
+              id="postal_code"
+              name="postal_code"
+              value={formData.postal_code}
+              onChange={handleChange}
+              placeholder="ZIP / Postal code"
+              disabled={loading}
             />
           </div>
         </div>
@@ -183,22 +303,25 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
 
       {/* Emergency Contact */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Emergency Contact</h3>
+        <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
+          Emergency Contact
+        </h3>
 
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <Label htmlFor="emergency_contact_name">Contact Name</Label>
+            <Label htmlFor="emergency_contact_name" className="text-fuchsia-700 dark:text-fuchsia-300">Contact Name</Label>
             <Input
               id="emergency_contact_name"
               name="emergency_contact_name"
               value={formData.emergency_contact_name}
               onChange={handleChange}
               placeholder="Jane Doe"
+              disabled={loading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="emergency_contact_phone">Contact Phone</Label>
+            <Label htmlFor="emergency_contact_phone" className="text-fuchsia-700 dark:text-fuchsia-300">Contact Phone</Label>
             <Input
               id="emergency_contact_phone"
               name="emergency_contact_phone"
@@ -206,97 +329,28 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
               value={formData.emergency_contact_phone}
               onChange={handleChange}
               placeholder="+1 (555) 987-6543"
+              disabled={loading}
             />
           </div>
         </div>
       </div>
 
-      {/* Medical History */}
+      {/* Notes */}
       <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Medical History</h3>
-
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="allergies">Allergies</Label>
-            <Textarea
-              id="allergies"
-              name="allergies"
-              value={formData.allergies}
-              onChange={handleChange}
-              placeholder="List any allergies to medications, foods, or other substances"
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="current_medications">Current Medications</Label>
-            <Textarea
-              id="current_medications"
-              name="current_medications"
-              value={formData.current_medications}
-              onChange={handleChange}
-              placeholder="List all medications you are currently taking"
-              rows={2}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="medical_conditions">Medical Conditions</Label>
-            <Textarea
-              id="medical_conditions"
-              name="medical_conditions"
-              value={formData.medical_conditions}
-              onChange={handleChange}
-              placeholder="List any chronic conditions or past medical history"
-              rows={2}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Insurance Information */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Insurance Information</h3>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="insurance_provider">Insurance Provider</Label>
-            <Input
-              id="insurance_provider"
-              name="insurance_provider"
-              value={formData.insurance_provider}
-              onChange={handleChange}
-              placeholder="Blue Cross, Aetna, etc."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="insurance_number">Insurance Number</Label>
-            <Input
-              id="insurance_number"
-              name="insurance_number"
-              value={formData.insurance_number}
-              onChange={handleChange}
-              placeholder="Policy/Member ID"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Reason for Visit */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Visit Information</h3>
+        <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
+          Additional Notes
+        </h3>
 
         <div className="space-y-2">
-          <Label htmlFor="reason_for_visit">Reason for Visit *</Label>
+          <Label htmlFor="notes" className="text-fuchsia-700 dark:text-fuchsia-300">Notes</Label>
           <Textarea
-            id="reason_for_visit"
-            name="reason_for_visit"
-            value={formData.reason_for_visit}
+            id="notes"
+            name="notes"
+            value={formData.notes}
             onChange={handleChange}
-            required
-            placeholder="Briefly describe the reason for your visit"
+            placeholder="Any additional information you'd like to share"
             rows={3}
+            disabled={loading}
           />
         </div>
       </div>
@@ -306,7 +360,7 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+          className="w-full bg-gradient-to-r from-fuchsia-600 to-fuchsia-700 hover:from-fuchsia-700 hover:to-fuchsia-800 shadow-lg shadow-fuchsia-500/25"
           size="lg"
         >
           {loading ? (
@@ -320,8 +374,8 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
         </Button>
       </div>
 
-      <p className="text-xs text-center text-muted-foreground">
-        By submitting this form, you consent to the collection and use of this information for medical purposes.
+      <p className="text-xs text-center text-fuchsia-600/60 dark:text-fuchsia-400/50">
+        By submitting this form, you consent to the collection and use of this information for dental care purposes.
       </p>
     </form>
   )

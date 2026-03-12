@@ -1,7 +1,7 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
 import { Sidebar } from '@/components/dashboard/Sidebar'
 import { Header } from '@/components/dashboard/Header'
+import { NotificationProvider } from '@/components/notifications/NotificationProvider'
+import { getCurrentDoctor } from '@/lib/supabase/queries'
 import type { Doctor } from '@/types'
 
 export default async function DashboardLayout({
@@ -9,29 +9,17 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const supabase = createClient()
-
-  // Middleware already handles auth, so we can trust user is authenticated
-  // Just fetch the data we need
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Fetch doctor profile - middleware ensures user exists
-  const { data: doctorData } = await supabase
-    .from('doctors')
-    .select('id, user_id, full_name, email, phone, specialty, avatar_url, clinic_name, updated_at')
-    .eq('user_id', user?.id)
-    .maybeSingle()
+  // Use cached function - reused across layout and children in the same request
+  const doctorData = await getCurrentDoctor()
 
   // If no doctor profile, show error message instead of redirecting
   if (!doctorData) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="max-w-md rounded-lg border border-red-200 bg-white p-6 shadow-lg dark:border-red-900 dark:bg-gray-950">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-fuchsia-50 via-white to-orange-50/30 dark:from-gray-950 dark:via-fuchsia-950/10 dark:to-gray-950">
+        <div className="max-w-md rounded-2xl border border-red-200 bg-white/80 backdrop-blur-xl p-8 shadow-xl dark:border-red-900/50 dark:bg-gray-950/80">
           <h2 className="text-xl font-bold text-red-600 dark:text-red-400">Profile Not Found</h2>
-          <p className="mt-2 text-gray-600 dark:text-gray-400">
-            Your doctor profile could not be found. Please contact support.
+          <p className="mt-2 text-fuchsia-600/70 dark:text-fuchsia-400/70">
+            Your profile could not be found. Please contact VR Dental Care support.
           </p>
         </div>
       </div>
@@ -42,20 +30,22 @@ export default async function DashboardLayout({
   const doctor = doctorData as Pick<Doctor, 'id' | 'full_name' | 'email' | 'avatar_url'>
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50 dark:bg-gray-900">
-      {/* Sidebar */}
-      <Sidebar />
+    <NotificationProvider doctorId={doctorData.id}>
+      <div className="flex h-screen overflow-hidden bg-gradient-to-br from-fuchsia-50/50 via-white to-orange-50/30 dark:from-gray-950 dark:via-fuchsia-950/10 dark:to-gray-950">
+        {/* Sidebar */}
+        <Sidebar />
 
-      {/* Main Content */}
-      <div className="flex flex-1 flex-col overflow-hidden">
-        {/* Header */}
-        <Header doctor={doctor} />
+        {/* Main Content */}
+        <div className="flex flex-1 flex-col overflow-hidden">
+          {/* Header */}
+          <Header doctor={doctor} />
 
-        {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-gray-50 dark:bg-gray-900 p-6">
-          {children}
-        </main>
+          {/* Page Content */}
+          <main className="flex-1 overflow-y-auto p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </NotificationProvider>
   )
 }

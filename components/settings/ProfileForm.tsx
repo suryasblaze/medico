@@ -44,7 +44,7 @@ export function ProfileForm({ doctor }: ProfileFormProps) {
       if (error) throw error
 
       setSuccess(true)
-      router.refresh()
+      window.location.reload()
     } catch (err: any) {
       setError(err.message || 'Failed to update profile')
     } finally {
@@ -97,7 +97,7 @@ export function ProfileForm({ doctor }: ProfileFormProps) {
 
       if (updateError) throw updateError
 
-      router.refresh()
+      window.location.reload()
       setSuccess(true)
     } catch (err: any) {
       setError(err.message || 'Failed to upload avatar')

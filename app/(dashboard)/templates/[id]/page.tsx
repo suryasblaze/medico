@@ -39,7 +39,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
       <div>
         <div className="flex items-start justify-between">
           <div>
-            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-fuchsia-600 bg-clip-text text-transparent">
               {template.title}
             </h2>
             <p className="text-muted-foreground mt-1">
@@ -175,7 +175,7 @@ export default async function TemplateDetailPage({ params }: TemplateDetailPageP
       </Card>
 
       {/* Info Card */}
-      <Card className="border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20">
+      <Card className="border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50/50 to-fuchsia-50/50 dark:from-blue-950/20 dark:to-fuchsia-950/20">
         <CardContent className="pt-6">
           <div className="flex items-start gap-4">
             <div className="h-12 w-12 rounded-xl bg-blue-600 flex items-center justify-center flex-shrink-0">

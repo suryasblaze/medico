@@ -1,11 +1,10 @@
 import {
   LayoutDashboard,
   Users,
-  FileText,
-  ClipboardList,
-  CreditCard,
+  Calendar,
+  Wallet,
   BarChart3,
-  Settings,
+  ClipboardList,
 } from 'lucide-react'
 
 export const navigationItems = [
@@ -22,23 +21,16 @@ export const navigationItems = [
     description: 'Manage patient records',
   },
   {
-    title: 'Templates',
-    href: '/templates',
-    icon: FileText,
-    description: 'Dental form templates',
+    title: 'Appointments',
+    href: '/appointments',
+    icon: Calendar,
+    description: 'Schedule appointments',
   },
   {
-    title: 'Intake Forms',
-    href: '/intake-forms',
-    icon: ClipboardList,
-    description: 'New patient submissions',
-  },
-  {
-    title: 'Payments',
-    href: '/payments',
-    icon: CreditCard,
-    description: 'Payment tracking',
-    badge: 'Soon',
+    title: 'Expenses',
+    href: '/expenses',
+    icon: Wallet,
+    description: 'Track clinic expenses',
   },
   {
     title: 'Reports',
@@ -47,9 +39,9 @@ export const navigationItems = [
     description: 'Monthly reports',
   },
   {
-    title: 'Settings',
-    href: '/settings',
-    icon: Settings,
-    description: 'Account settings',
+    title: 'Intake Forms',
+    href: '/intake-forms',
+    icon: ClipboardList,
+    description: 'New patient submissions',
   },
 ]

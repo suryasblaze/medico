@@ -1,20 +1,13 @@
 import { createClient } from '@/lib/supabase/server'
+import { getCurrentDoctor } from '@/lib/supabase/queries'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { ReportDownloader } from '@/components/reports/ReportDownloader'
 import { FileText, Calendar, TrendingUp, Users, Activity } from 'lucide-react'
 
 export default async function ReportsPage() {
+  // Use cached doctor - already fetched in layout
+  const doctor = await getCurrentDoctor()
   const supabase = createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const { data: doctor } = await supabase
-    .from('doctors')
-    .select('id')
-    .eq('user_id', user?.id)
-    .maybeSingle()
 
   // Fetch data for reports
   const [
@@ -47,8 +40,8 @@ export default async function ReportsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Reports & Analytics</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">Reports & Analytics</h2>
+        <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70">
           Download monthly reports and view practice analytics
         </p>
       </div>
@@ -90,8 +83,8 @@ export default async function ReportsPage() {
                 <p className="text-sm font-medium text-muted-foreground">This Month</p>
                 <p className="text-3xl font-bold mt-2">{thisMonthVisits}</p>
               </div>
-              <div className="h-12 w-12 rounded-full bg-purple-100 dark:bg-purple-950/20 flex items-center justify-center">
-                <Calendar className="h-6 w-6 text-purple-600" />
+              <div className="h-12 w-12 rounded-full bg-fuchsia-100 dark:bg-fuchsia-950/20 flex items-center justify-center">
+                <Calendar className="h-6 w-6 text-fuchsia-600" />
               </div>
             </div>
           </CardContent>
@@ -123,9 +116,9 @@ export default async function ReportsPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-950/10 rounded-lg border border-blue-200 dark:border-blue-900">
-            <p className="text-sm text-blue-700 dark:text-blue-400">
-              📥 <strong>Note:</strong> After selecting your options, click the "Excel/CSV" button below to download your report file.
+          <div className="mb-4 p-3 bg-fuchsia-50 dark:bg-fuchsia-950/20 rounded-xl border border-fuchsia-200 dark:border-fuchsia-900/50">
+            <p className="text-sm text-fuchsia-700 dark:text-fuchsia-400">
+              <strong>Note:</strong> After selecting your options, click the "Excel/CSV" button below to download your report file.
             </p>
           </div>
           <ReportDownloader doctorId={doctor?.id || ''} />
@@ -154,7 +147,7 @@ export default async function ReportsPage() {
 
               <Card className="border-dashed">
                 <CardContent className="pt-6 text-center">
-                  <FileText className="h-8 w-8 text-purple-600 mx-auto mb-2" />
+                  <FileText className="h-8 w-8 text-fuchsia-600 mx-auto mb-2" />
                   <p className="text-sm font-medium">Statistics</p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Monthly analytics
@@ -174,27 +167,31 @@ export default async function ReportsPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {recentVisits?.map((visit: any) => (
-              <div
-                key={visit.id}
-                className="flex items-center justify-between py-3 border-b last:border-0"
-              >
-                <div>
-                  <p className="font-medium">{visit.patients?.full_name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {visit.diagnosis || visit.chief_complaint || 'Regular checkup'}
-                  </p>
+            {recentVisits?.map((visit: any) => {
+              const notePreview = (visit.notes || '')
+                .replace(/<[^>]*>/g, '')
+                .replace(/&nbsp;/g, ' ')
+                .trim()
+                .slice(0, 80)
+              return (
+                <div
+                  key={visit.id}
+                  className="flex items-center justify-between py-3 border-b last:border-0"
+                >
+                  <div>
+                    <p className="font-medium">{visit.patients?.full_name}</p>
+                    <p className="text-sm text-muted-foreground line-clamp-1">
+                      {notePreview || 'Visit record'}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-medium">
+                      {new Date(visit.visit_date).toLocaleDateString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium">
-                    {new Date(visit.visit_date).toLocaleDateString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground capitalize">
-                    {visit.visit_type?.replace('_', ' ')}
-                  </p>
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </CardContent>
       </Card>

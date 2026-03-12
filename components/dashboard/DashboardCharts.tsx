@@ -7,27 +7,28 @@ interface DashboardChartsProps {
   visitData: any[]
   patientGrowth: any[]
   visitTypes: any[]
+  weeklyActivity: any[]
 }
 
 const COLORS = {
-  primary: '#3b82f6',    // blue-600
-  secondary: '#8b5cf6',  // purple-600
-  tertiary: '#06b6d4',   // cyan-600
-  success: '#10b981',    // green-600
-  warning: '#f59e0b',    // amber-600
-  danger: '#ef4444',     // red-600
+  primary: '#9B2D8F',    // purple (main brand)
+  secondary: '#F5841F',  // orange (accent)
+  tertiary: '#7AB942',   // green (highlight)
+  success: '#7AB942',    // green
+  warning: '#F5841F',    // orange
+  danger: '#ef4444',     // red
 }
 
 const VISIT_TYPE_COLORS = [
-  '#3b82f6', // blue
-  '#8b5cf6', // purple
-  '#06b6d4', // cyan
-  '#10b981', // green
-  '#f59e0b', // amber
-  '#ef4444', // red
+  '#9B2D8F', // purple
+  '#F5841F', // orange
+  '#7AB942', // green
+  '#B84D9B', // lighter purple
+  '#F9A54D', // lighter orange
+  '#8FCC5A', // lighter green
 ]
 
-export function DashboardCharts({ visitData, patientGrowth, visitTypes }: DashboardChartsProps) {
+export function DashboardCharts({ visitData, patientGrowth, visitTypes, weeklyActivity }: DashboardChartsProps) {
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       {/* Monthly Visits Bar Chart */}
@@ -180,17 +181,7 @@ export function DashboardCharts({ visitData, patientGrowth, visitTypes }: Dashbo
         </CardHeader>
         <CardContent>
           <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={[
-                { day: 'Mon', visits: 12 },
-                { day: 'Tue', visits: 19 },
-                { day: 'Wed', visits: 15 },
-                { day: 'Thu', visits: 22 },
-                { day: 'Fri', visits: 18 },
-                { day: 'Sat', visits: 8 },
-                { day: 'Sun', visits: 4 },
-              ]}
-            >
+            <BarChart data={weeklyActivity}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
               <XAxis
                 dataKey="day"

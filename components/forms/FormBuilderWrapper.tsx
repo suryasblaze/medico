@@ -87,8 +87,8 @@ export function FormBuilderWrapper({ doctorId }: FormBuilderWrapperProps) {
 
       if (fieldsError) throw fieldsError
 
-      router.push('/forms')
-      router.refresh()
+      // Navigate and force refresh
+      window.location.href = '/forms'
     } catch (err: any) {
       setError(err.message || 'Failed to save form')
     } finally {

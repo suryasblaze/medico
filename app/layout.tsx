@@ -1,12 +1,29 @@
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { Poppins } from 'next/font/google'
 import './globals.css'
 
-const inter = Inter({ subsets: ['latin'] })
+const poppins = Poppins({
+  subsets: ['latin'],
+  weight: ['300', '400', '500', '600', '700'],
+  variable: '--font-poppins'
+})
 
 export const metadata: Metadata = {
-  title: 'MediCore - Doctor-Patient Form Management',
-  description: 'Modern SaaS platform for doctor-patient form management',
+  title: 'VR Dental Care - Patient Management System',
+  description: 'Modern dental practice management platform for VR Dental Care',
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'VR Dental Care',
+  },
+}
+
+export const viewport: Viewport = {
+  themeColor: '#9B2D8F',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -16,7 +33,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <head>
+        <link rel="icon" href="/logo.jpeg" type="image/jpeg" />
+        <link rel="apple-touch-icon" href="/logo.jpeg" />
+      </head>
+      <body className={`${poppins.className} ${poppins.variable} antialiased`}>{children}</body>
     </html>
   )
 }

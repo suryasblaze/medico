@@ -34,14 +34,14 @@ export default async function TemplateFormPage({ params }: TemplateFormPageProps
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-fuchsia-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
       <div className="container max-w-4xl mx-auto py-12 px-4">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center h-16 w-16 rounded-full bg-blue-600 text-white mb-4">
             <FileText className="h-8 w-8" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-fuchsia-600 bg-clip-text text-transparent">
             {template.title}
           </h1>
           <p className="text-muted-foreground mt-2">
@@ -50,7 +50,7 @@ export default async function TemplateFormPage({ params }: TemplateFormPageProps
         </div>
 
         {/* Doctor Info Card */}
-        <Card className="mb-6 border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20">
+        <Card className="mb-6 border-blue-200 dark:border-blue-900 bg-gradient-to-r from-blue-50/50 to-fuchsia-50/50 dark:from-blue-950/20 dark:to-fuchsia-950/20">
           <CardContent className="pt-6">
             <div className="flex items-start gap-4">
               <div className="h-12 w-12 rounded-full bg-blue-600 flex items-center justify-center flex-shrink-0">

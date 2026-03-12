@@ -5,8 +5,8 @@ export default function PaymentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Payments</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">Payments</h2>
+        <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70">
           Track patient payments and invoices
         </p>
       </div>
@@ -14,8 +14,8 @@ export default function PaymentsPage() {
       <Card className="p-12">
         <div className="flex flex-col items-center justify-center text-center space-y-4">
           <div className="relative">
-            <div className="h-20 w-20 rounded-full bg-blue-100 dark:bg-blue-950/20 flex items-center justify-center">
-              <CreditCard className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+            <div className="h-20 w-20 rounded-full bg-fuchsia-100 dark:bg-fuchsia-950/30 flex items-center justify-center">
+              <CreditCard className="h-10 w-10 text-fuchsia-600 dark:text-fuchsia-400" />
             </div>
             <div className="absolute -top-1 -right-1 h-8 w-8 rounded-full bg-yellow-100 dark:bg-yellow-950/20 flex items-center justify-center border-2 border-white dark:border-gray-950">
               <Construction className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
@@ -60,8 +60,8 @@ export default function PaymentsPage() {
 
             <Card className="p-4">
               <div className="text-center space-y-1">
-                <div className="h-8 w-8 rounded-lg bg-purple-100 dark:bg-purple-950/20 flex items-center justify-center mx-auto">
-                  <svg className="h-5 w-5 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="h-8 w-8 rounded-lg bg-fuchsia-100 dark:bg-fuchsia-950/20 flex items-center justify-center mx-auto">
+                  <svg className="h-5 w-5 text-fuchsia-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>

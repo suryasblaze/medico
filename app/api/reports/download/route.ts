@@ -37,9 +37,15 @@ export async function POST(request: NextRequest) {
           .lte('visit_date', endDate.toISOString())
           .order('visit_date', { ascending: false })
 
-        csvContent = 'Date,Patient Name,MRN,Visit Type,Diagnosis,Treatment\n'
+        csvContent = 'Date,Patient Name,MRN,Email,Phone,Notes\n'
         visits?.forEach((visit: any) => {
-          csvContent += `${new Date(visit.visit_date).toLocaleDateString()},${visit.patients?.full_name || 'N/A'},${visit.patients?.medical_record_number || 'N/A'},${visit.visit_type || 'N/A'},${visit.diagnosis || 'N/A'},${visit.treatment_plan || 'N/A'}\n`
+          const notes = (visit.notes || '')
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/"/g, '""')
+            .trim()
+            .slice(0, 200)
+          csvContent += `${new Date(visit.visit_date).toLocaleDateString()},"${visit.patients?.full_name || 'N/A'}",${visit.patients?.medical_record_number || 'N/A'},${visit.patients?.email || 'N/A'},${visit.patients?.phone || 'N/A'},"${notes}"\n`
         })
         filename = `patient-visits-${month}.csv`
         break
@@ -69,9 +75,15 @@ export async function POST(request: NextRequest) {
           .lte('visit_date', endDate.toISOString())
           .order('visit_date', { ascending: false })
 
-        csvContent = 'Date,Patient,MRN,Chief Complaint,Diagnosis,Medications Prescribed\n'
+        csvContent = 'Date,Patient,MRN,Notes\n'
         records?.forEach((record: any) => {
-          csvContent += `${new Date(record.visit_date).toLocaleDateString()},${record.patients?.full_name || 'N/A'},${record.patients?.medical_record_number || 'N/A'},${record.chief_complaint || 'N/A'},${record.diagnosis || 'N/A'},${record.medications_prescribed || 'N/A'}\n`
+          const notes = (record.notes || '')
+            .replace(/<[^>]*>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/"/g, '""')
+            .trim()
+            .slice(0, 300)
+          csvContent += `${new Date(record.visit_date).toLocaleDateString()},"${record.patients?.full_name || 'N/A'}",${record.patients?.medical_record_number || 'N/A'},"${notes}"\n`
         })
         filename = `medical-records-${month}.csv`
         break
@@ -90,27 +102,19 @@ export async function POST(request: NextRequest) {
           .gte('visit_date', startDate.toISOString())
           .lte('visit_date', endDate.toISOString())
 
-        const { data: visitsByType } = await supabase
-          .from('medical_records')
-          .select('visit_type')
+        const { count: newPatientsThisMonth } = await supabase
+          .from('patients')
+          .select('*', { count: 'exact', head: true })
           .eq('doctor_id', doctorId)
-          .gte('visit_date', startDate.toISOString())
-          .lte('visit_date', endDate.toISOString())
-
-        const visitTypeCounts: Record<string, number> = {}
-        visitsByType?.forEach((v: any) => {
-          visitTypeCounts[v.visit_type || 'other'] = (visitTypeCounts[v.visit_type || 'other'] || 0) + 1
-        })
+          .gte('created_at', startDate.toISOString())
+          .lte('created_at', endDate.toISOString())
 
         csvContent = `Monthly Statistics for ${doctor.clinic_name || doctor.full_name}\n`
         csvContent += `Month: ${new Date(startDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}\n\n`
         csvContent += 'Metric,Value\n'
         csvContent += `Total Patients,${totalPatients || 0}\n`
+        csvContent += `New Patients This Month,${newPatientsThisMonth || 0}\n`
         csvContent += `Visits This Month,${monthVisits || 0}\n`
-        csvContent += `\nVisit Types:\n`
-        Object.entries(visitTypeCounts).forEach(([type, count]) => {
-          csvContent += `${type},${count}\n`
-        })
         filename = `statistics-${month}.csv`
         break
 

@@ -20,6 +20,7 @@ export interface Patient {
   full_name: string
   email?: string
   phone?: string
+  phone_numbers?: string[]
   date_of_birth?: string
   gender?: 'male' | 'female' | 'other' | 'prefer_not_to_say'
   address?: string
@@ -36,6 +37,7 @@ export interface Patient {
   blood_type?: 'A+' | 'A-' | 'B+' | 'B-' | 'AB+' | 'AB-' | 'O+' | 'O-'
   insurance_provider?: string
   insurance_number?: string
+  avatar_url?: string
   created_at: string
   updated_at: string
 }
@@ -45,25 +47,7 @@ export interface MedicalRecord {
   patient_id: string
   doctor_id: string
   visit_date: string
-  visit_type?: 'consultation' | 'follow_up' | 'emergency' | 'routine_checkup' | 'procedure' | 'other'
-  temperature?: number
-  blood_pressure_systolic?: number
-  blood_pressure_diastolic?: number
-  heart_rate?: number
-  respiratory_rate?: number
-  oxygen_saturation?: number
-  weight?: number
-  height?: number
-  bmi?: number
-  chief_complaint?: string
-  symptoms?: string
-  diagnosis?: string
-  clinical_notes?: string
-  treatment_plan?: string
-  medications_prescribed?: string
-  lab_tests_ordered?: string
-  follow_up_date?: string
-  follow_up_instructions?: string
+  notes: string
   created_at: string
   updated_at: string
 }
@@ -182,4 +166,61 @@ export interface Subscription {
   cancelled_at?: string
   created_at: string
   updated_at: string
+}
+
+export type DocumentType =
+  | 'lab_report'
+  | 'prescription'
+  | 'imaging'
+  | 'referral'
+  | 'insurance'
+  | 'consent_form'
+  | 'medical_history'
+  | 'discharge_summary'
+  | 'other'
+
+export interface PatientDocument {
+  id: string
+  patient_id: string
+  doctor_id: string
+  medical_record_id?: string
+  file_name: string
+  file_url: string
+  file_size: number
+  file_type: string
+  document_type: DocumentType
+  description?: string
+  uploaded_at: string
+  created_at: string
+  updated_at: string
+}
+
+export interface Expense {
+  id: string
+  doctor_id: string
+  title: string
+  description?: string
+  amount: number
+  category?: string
+  expense_date: string
+  created_at: string
+  updated_at: string
+}
+
+export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled'
+
+export interface Appointment {
+  id: string
+  doctor_id: string
+  patient_id: string
+  title?: string
+  appointment_date: string
+  start_time: string
+  end_time?: string
+  notes?: string
+  status: AppointmentStatus
+  created_at: string
+  updated_at: string
+  // Joined data
+  patient?: Patient
 }

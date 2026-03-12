@@ -1,20 +1,31 @@
+import Image from 'next/image'
 import { SignupForm } from '@/components/auth/SignupForm'
 import Link from 'next/link'
 
 export default function SignupPage() {
   return (
     <div className="w-full max-w-md">
-      {/* Glassmorphism card */}
-      <div className="rounded-2xl border border-white/20 bg-white/70 p-8 shadow-2xl backdrop-blur-xl dark:bg-gray-900/70 dark:border-gray-800/50">
+      {/* Modern glassmorphism card */}
+      <div className="rounded-3xl border border-white/40 bg-white/80 p-8 shadow-2xl shadow-fuchsia-500/10 backdrop-blur-xl dark:bg-gray-900/80 dark:border-fuchsia-800/30">
         <div className="space-y-6">
-          {/* Header */}
-          <div className="space-y-2 text-center">
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Start your free trial
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Create your account and get started in minutes
-            </p>
+          {/* Header with logo */}
+          <div className="flex flex-col items-center space-y-4">
+            <div className="relative h-16 w-16 rounded-2xl overflow-hidden shadow-xl shadow-fuchsia-500/25 ring-4 ring-white/60 dark:ring-gray-800/60">
+              <Image
+                src="/logo.jpeg"
+                alt="VR Dental Care"
+                fill
+                className="object-cover"
+              />
+            </div>
+            <div className="text-center space-y-2">
+              <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">
+                Join VR Dental Care
+              </h1>
+              <p className="text-sm text-fuchsia-600/70 dark:text-fuchsia-400/70">
+                Create your account to get started
+              </p>
+            </div>
           </div>
 
           {/* Signup form */}
@@ -23,10 +34,10 @@ export default function SignupPage() {
           {/* Sign in link */}
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-gray-200 dark:border-gray-800" />
+              <span className="w-full border-t border-fuchsia-200 dark:border-fuchsia-800" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white/70 dark:bg-gray-900/70 px-2 text-muted-foreground">
+              <span className="bg-white/80 dark:bg-gray-900/80 px-3 text-fuchsia-600/70 dark:text-fuchsia-400/70">
                 Already have an account?
               </span>
             </div>
@@ -34,7 +45,7 @@ export default function SignupPage() {
 
           <Link
             href="/login"
-            className="block w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white/50 dark:bg-gray-900/50 px-4 py-2.5 text-center text-sm font-medium transition-all hover:bg-white dark:hover:bg-gray-900 hover:shadow-md"
+            className="block w-full rounded-xl border border-fuchsia-200 dark:border-fuchsia-800 bg-white/50 dark:bg-gray-950/50 px-4 py-3 text-center text-sm font-medium text-fuchsia-700 dark:text-fuchsia-300 transition-all hover:bg-fuchsia-50 dark:hover:bg-fuchsia-950/30 hover:shadow-md"
           >
             Sign in instead
           </Link>
@@ -42,18 +53,18 @@ export default function SignupPage() {
       </div>
 
       {/* Features list */}
-      <div className="mt-8 grid grid-cols-3 gap-4 text-center text-xs text-muted-foreground">
-        <div>
-          <div className="font-semibold text-foreground">14 Days Free</div>
-          <div>No credit card</div>
+      <div className="mt-8 grid grid-cols-3 gap-4 text-center text-xs">
+        <div className="p-3 rounded-xl bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm">
+          <div className="font-semibold text-fuchsia-700 dark:text-fuchsia-300">Free Trial</div>
+          <div className="text-fuchsia-600/60 dark:text-fuchsia-400/60">No credit card</div>
         </div>
-        <div>
-          <div className="font-semibold text-foreground">Full Access</div>
-          <div>All features</div>
+        <div className="p-3 rounded-xl bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm">
+          <div className="font-semibold text-fuchsia-700 dark:text-fuchsia-300">Full Access</div>
+          <div className="text-fuchsia-600/60 dark:text-fuchsia-400/60">All features</div>
         </div>
-        <div>
-          <div className="font-semibold text-foreground">Cancel Anytime</div>
-          <div>No commitment</div>
+        <div className="p-3 rounded-xl bg-white/50 dark:bg-gray-950/50 backdrop-blur-sm">
+          <div className="font-semibold text-fuchsia-700 dark:text-fuchsia-300">Support</div>
+          <div className="text-fuchsia-600/60 dark:text-fuchsia-400/60">24/7 help</div>
         </div>
       </div>
     </div>

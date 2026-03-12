@@ -50,8 +50,8 @@ export default async function SubmissionsPage({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-3xl font-bold tracking-tight">Submissions</h2>
-        <p className="text-muted-foreground">
+        <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-orange-500 bg-clip-text text-transparent">Submissions</h2>
+        <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70">
           View and manage all form submissions from your patients
         </p>
       </div>

@@ -18,13 +18,10 @@ export default function LoginPage() {
                 className="object-contain"
               />
             </div>
-            <div className="text-center space-y-1">
+            <div className="text-center">
               <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-fuchsia-700 via-fuchsia-600 to-fuchsia-800 bg-clip-text text-transparent">
-                Welcome Back
+                Welcome, Dr.Senthil
               </h1>
-              <p className="text-sm text-fuchsia-600/70 dark:text-fuchsia-400/70">
-                Sign in to manage your dental practice
-              </p>
             </div>
           </div>
 

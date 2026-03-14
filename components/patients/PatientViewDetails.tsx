@@ -4,6 +4,11 @@ import { Patient, MedicalRecord } from '@/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import {
   User,
   Mail,
   Phone,
@@ -34,6 +39,27 @@ export function PatientViewDetails({ patient, medicalRecords }: PatientViewDetai
     return gender.charAt(0).toUpperCase() + gender.slice(1).replace('_', ' ')
   }
 
+  const calculateAge = (dob: string | null | undefined): number => {
+    if (!dob) return 0
+    const birthDate = new Date(dob)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+
+  const isUnder18 = calculateAge(patient.date_of_birth) > 0 && calculateAge(patient.date_of_birth) < 18
+
+  const initials = patient.full_name
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+
   return (
     <div className="space-y-6">
       {/* Basic Information */}
@@ -45,6 +71,49 @@ export function PatientViewDetails({ patient, medicalRecords }: PatientViewDetai
           </CardTitle>
         </CardHeader>
         <CardContent>
+          <div className="flex gap-6 mb-6">
+            {/* Profile Photo with Hover Popup */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <div className="h-20 w-20 rounded-full bg-fuchsia-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer hover:opacity-80 transition-opacity flex-shrink-0">
+                  {patient.avatar_url ? (
+                    <img
+                      src={patient.avatar_url}
+                      alt={patient.full_name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    initials || <User className="h-8 w-8" />
+                  )}
+                </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-2" side="right">
+                <div className="flex flex-col items-center gap-2">
+                  <div className="h-48 w-48 rounded-lg bg-fuchsia-600 flex items-center justify-center text-white text-5xl font-bold overflow-hidden">
+                    {patient.avatar_url ? (
+                      <img
+                        src={patient.avatar_url}
+                        alt={patient.full_name}
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      initials || <User className="h-16 w-16" />
+                    )}
+                  </div>
+                  <p className="text-sm font-medium">{patient.full_name}</p>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold">{patient.full_name}</h2>
+              <p className="text-sm text-muted-foreground">MRN: {patient.medical_record_number || '-'}</p>
+              {isUnder18 && (
+                <Badge variant="outline" className="mt-1 text-orange-600 border-orange-600">
+                  Under 18
+                </Badge>
+              )}
+            </div>
+          </div>
           <div className="grid gap-6 md:grid-cols-2">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Full Name</p>
@@ -115,35 +184,37 @@ export function PatientViewDetails({ patient, medicalRecords }: PatientViewDetai
         </CardContent>
       </Card>
 
-      {/* Emergency Contact */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <AlertCircle className="h-5 w-5 text-orange-600" />
-            Emergency Contact
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Contact Name</p>
-              <p className="text-base">{patient.emergency_contact_name || '-'}</p>
+      {/* Parent/Guardian Information - Only for patients under 18 */}
+      {isUnder18 && (patient.parent_guardian_name || patient.parent_guardian_phone) && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+              Parent/Guardian Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Parent/Guardian Name</p>
+                <p className="text-base">{patient.parent_guardian_name || '-'}</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-muted-foreground">Parent/Guardian Phone</p>
+                <p className="text-base">{patient.parent_guardian_phone || '-'}</p>
+              </div>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Contact Phone</p>
-              <p className="text-base">{patient.emergency_contact_phone || '-'}</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
-      {/* Notes */}
+      {/* Reason for Visit */}
       {patient.notes && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg">
               <FileText className="h-5 w-5 text-fuchsia-600" />
-              Notes
+              Reason for Visit
             </CardTitle>
           </CardHeader>
           <CardContent>

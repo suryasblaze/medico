@@ -154,6 +154,7 @@ export default async function PatientDetailPage({
       <PatientDetailTabs
         patient={patient}
         doctorId={doctor.id}
+        doctorEmail={doctor.email}
         medicalRecords={medicalRecords || []}
         documents={documents || []}
       />

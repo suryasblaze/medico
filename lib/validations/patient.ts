@@ -11,8 +11,8 @@ export const patientSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   postal_code: z.string().optional(),
-  emergency_contact_name: z.string().optional(),
-  emergency_contact_phone: z.string().optional(),
+  parent_guardian_name: z.string().optional(),
+  parent_guardian_phone: z.string().optional(),
   medical_record_number: z.string().optional(),
   notes: z.string().optional(),
 })

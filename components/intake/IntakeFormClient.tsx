@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
-import { CheckCircle, Loader2, Phone, Plus, X } from 'lucide-react'
+import { Camera, CheckCircle, Loader2, Phone, Plus, X, Upload } from 'lucide-react'
 
 interface IntakeFormClientProps {
   doctorId: string
@@ -23,6 +23,14 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [phoneNumbers, setPhoneNumbers] = useState([''])
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [isUnder18, setIsUnder18] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const [formData, setFormData] = useState({
     full_name: '',
     date_of_birth: '',
@@ -33,10 +41,35 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
     city: '',
     state: '',
     postal_code: '',
-    emergency_contact_name: '',
-    emergency_contact_phone: '',
+    parent_guardian_name: '',
+    parent_guardian_phone: '',
     notes: '',
   })
+
+  const calculateAge = (dob: string): number => {
+    if (!dob) return 0
+    const birthDate = new Date(dob)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+
+  useEffect(() => {
+    const age = calculateAge(formData.date_of_birth)
+    setIsUnder18(age > 0 && age < 18)
+  }, [formData.date_of_birth])
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData({
@@ -62,6 +95,105 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
     setFormData({ ...formData, phone: newPhones[0] || '' })
   }
 
+  const handleAvatarUpload = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      alert('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Image must be less than 5MB')
+      return
+    }
+
+    setUploadingAvatar(true)
+    try {
+      const supabase = createClient()
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+      const filePath = `${doctorId}/intake/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('patient-avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('patient-avatars')
+        .getPublicUrl(filePath)
+
+      setAvatarUrl(urlData.publicUrl)
+    } catch (err: any) {
+      alert(err.message || 'Failed to upload image')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleAvatarUpload(file)
+  }
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: 640, height: 480 }
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+      setShowCamera(true)
+    } catch (err) {
+      alert('Unable to access camera. Please check permissions.')
+    }
+  }
+
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.drawImage(video, 0, 0)
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' })
+          await handleAvatarUpload(file)
+        }
+      }, 'image/jpeg', 0.9)
+    }
+    stopCamera()
+  }
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setShowCamera(false)
+  }
+
+  const removeAvatar = async () => {
+    if (!avatarUrl) return
+    setUploadingAvatar(true)
+    try {
+      const supabase = createClient()
+      const oldPath = avatarUrl.split('/patient-avatars/')[1]
+      if (oldPath) {
+        await supabase.storage.from('patient-avatars').remove([oldPath])
+      }
+      setAvatarUrl(null)
+    } catch (err) {
+      console.error('Failed to remove avatar')
+    } finally {
+      setUploadingAvatar(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -84,8 +216,9 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
           city: formData.city,
           state: formData.state,
           postal_code: formData.postal_code,
-          emergency_contact_name: formData.emergency_contact_name,
-          emergency_contact_phone: formData.emergency_contact_phone,
+          parent_guardian_name: isUnder18 ? formData.parent_guardian_name : null,
+          parent_guardian_phone: isUnder18 ? formData.parent_guardian_phone : null,
+          avatar_url: avatarUrl,
           notes: formData.notes,
         })
 
@@ -119,6 +252,106 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Profile Photo */}
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
+          Profile Photo
+        </h3>
+
+        <div className="flex items-center gap-6">
+          <div className="relative">
+            <div
+              className="h-24 w-24 rounded-full bg-fuchsia-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => !showCamera && fileInputRef.current?.click()}
+            >
+              {uploadingAvatar ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : avatarUrl ? (
+                <img src={avatarUrl} alt="Profile" className="h-full w-full object-cover" />
+              ) : (
+                <Camera className="h-8 w-8" />
+              )}
+            </div>
+            {avatarUrl && !uploadingAvatar && (
+              <button
+                type="button"
+                onClick={removeAvatar}
+                className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileChange}
+              className="hidden"
+            />
+          </div>
+          <div className="space-y-2">
+            <p className="text-sm text-fuchsia-600/70 dark:text-fuchsia-400/70">
+              Upload or take a photo
+            </p>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar || loading}
+                className="border-fuchsia-200 dark:border-fuchsia-800"
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                Upload
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={startCamera}
+                disabled={uploadingAvatar || loading || showCamera}
+                className="border-fuchsia-200 dark:border-fuchsia-800"
+              >
+                <Camera className="h-4 w-4 mr-1" />
+                Camera
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Camera View */}
+        {showCamera && (
+          <div className="space-y-3 p-4 bg-fuchsia-50 dark:bg-fuchsia-950/20 rounded-lg">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full max-w-md mx-auto rounded-lg"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+            <div className="flex justify-center gap-2">
+              <Button
+                type="button"
+                onClick={capturePhoto}
+                className="bg-fuchsia-600 hover:bg-fuchsia-700"
+              >
+                <Camera className="h-4 w-4 mr-1" />
+                Capture
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={stopCamera}
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Basic Information */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
@@ -154,6 +387,11 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
               required
               disabled={loading}
             />
+            {isUnder18 && (
+              <p className="text-xs text-orange-600 dark:text-orange-400">
+                Patient is under 18 - Parent/Guardian information required below
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -301,54 +539,62 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
         </div>
       </div>
 
-      {/* Emergency Contact */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
-          Emergency Contact
-        </h3>
+      {/* Parent/Guardian Information - Only for patients under 18 */}
+      {isUnder18 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
+            Parent/Guardian Information <span className="text-orange-500">*</span>
+          </h3>
 
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="emergency_contact_name" className="text-fuchsia-700 dark:text-fuchsia-300">Contact Name</Label>
-            <Input
-              id="emergency_contact_name"
-              name="emergency_contact_name"
-              value={formData.emergency_contact_name}
-              onChange={handleChange}
-              placeholder="Jane Doe"
-              disabled={loading}
-            />
-          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="parent_guardian_name" className="text-fuchsia-700 dark:text-fuchsia-300">
+                Parent/Guardian Name <span className="text-orange-500">*</span>
+              </Label>
+              <Input
+                id="parent_guardian_name"
+                name="parent_guardian_name"
+                value={formData.parent_guardian_name}
+                onChange={handleChange}
+                placeholder="Parent or Guardian Name"
+                disabled={loading}
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="emergency_contact_phone" className="text-fuchsia-700 dark:text-fuchsia-300">Contact Phone</Label>
-            <Input
-              id="emergency_contact_phone"
-              name="emergency_contact_phone"
-              type="tel"
-              value={formData.emergency_contact_phone}
-              onChange={handleChange}
-              placeholder="+1 (555) 987-6543"
-              disabled={loading}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="parent_guardian_phone" className="text-fuchsia-700 dark:text-fuchsia-300">
+                Parent/Guardian Phone <span className="text-orange-500">*</span>
+              </Label>
+              <Input
+                id="parent_guardian_phone"
+                name="parent_guardian_phone"
+                type="tel"
+                value={formData.parent_guardian_phone}
+                onChange={handleChange}
+                placeholder="+1 (555) 987-6543"
+                disabled={loading}
+                required
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Notes */}
+      {/* Reason for Visit */}
       <div className="space-y-4">
         <h3 className="text-lg font-semibold text-fuchsia-800 dark:text-fuchsia-200 border-b border-fuchsia-100 dark:border-fuchsia-900/30 pb-2">
-          Additional Notes
+          Reason for Visit
         </h3>
 
         <div className="space-y-2">
-          <Label htmlFor="notes" className="text-fuchsia-700 dark:text-fuchsia-300">Notes</Label>
+          <Label htmlFor="notes" className="text-fuchsia-700 dark:text-fuchsia-300">Reason for Visit</Label>
           <Textarea
             id="notes"
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            placeholder="Any additional information you'd like to share"
+            placeholder="Please describe your reason for visiting"
             rows={3}
             disabled={loading}
           />

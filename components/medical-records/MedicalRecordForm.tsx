@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { DocumentType } from '@/types'
@@ -29,6 +29,12 @@ interface MedicalRecordFormProps {
   patientId: string
   doctorId: string
   onSuccess?: () => void
+  record?: {
+    id: string
+    visit_date: string
+    notes: string
+  }
+  onCancel?: () => void
 }
 
 interface PendingFile {
@@ -68,14 +74,22 @@ function formatFileSize(bytes: number): string {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
 }
 
-export function MedicalRecordForm({ patientId, doctorId, onSuccess }: MedicalRecordFormProps) {
+export function MedicalRecordForm({ patientId, doctorId, onSuccess, record, onCancel }: MedicalRecordFormProps) {
   const router = useRouter()
   const editorRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
-  const [visitDate, setVisitDate] = useState(new Date().toISOString().split('T')[0])
+  const [visitDate, setVisitDate] = useState(record?.visit_date || new Date().toISOString().split('T')[0])
+  const isEditing = !!record
+
+  // Set initial content when editing
+  useEffect(() => {
+    if (record && editorRef.current) {
+      editorRef.current.innerHTML = record.notes || ''
+    }
+  }, [record])
 
   const execCommand = useCallback((command: string, value?: string) => {
     document.execCommand(command, false, value)
@@ -129,23 +143,38 @@ export function MedicalRecordForm({ patientId, doctorId, onSuccess }: MedicalRec
 
     try {
       const supabase = createClient()
+      let recordId = record?.id
 
-      // Insert medical record
-      const { data: record, error: insertError } = await supabase
-        .from('medical_records')
-        .insert({
-          patient_id: patientId,
-          doctor_id: doctorId,
-          visit_date: visitDate,
-          notes: notes,
-        })
-        .select('id')
-        .single()
+      if (isEditing && record) {
+        // Update existing medical record
+        const { error: updateError } = await supabase
+          .from('medical_records')
+          .update({
+            visit_date: visitDate,
+            notes: notes,
+          })
+          .eq('id', record.id)
 
-      if (insertError) throw insertError
+        if (updateError) throw updateError
+      } else {
+        // Insert new medical record
+        const { data: newRecord, error: insertError } = await supabase
+          .from('medical_records')
+          .insert({
+            patient_id: patientId,
+            doctor_id: doctorId,
+            visit_date: visitDate,
+            notes: notes,
+          })
+          .select('id')
+          .single()
 
-      // Upload files
-      if (pendingFiles.length > 0 && record) {
+        if (insertError) throw insertError
+        recordId = newRecord?.id
+      }
+
+      // Upload files (only for new records or new files added during edit)
+      if (pendingFiles.length > 0 && recordId) {
         for (const pending of pendingFiles) {
           const fileName = `${Date.now()}_${pending.file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
           const filePath = `${doctorId}/${patientId}/${fileName}`
@@ -163,7 +192,7 @@ export function MedicalRecordForm({ patientId, doctorId, onSuccess }: MedicalRec
           await supabase.from('patient_documents').insert({
             patient_id: patientId,
             doctor_id: doctorId,
-            medical_record_id: record.id,
+            medical_record_id: recordId,
             file_name: pending.file.name,
             file_url: urlData.publicUrl,
             file_size: pending.file.size,
@@ -409,11 +438,18 @@ export function MedicalRecordForm({ patientId, doctorId, onSuccess }: MedicalRec
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Saving...
             </>
+          ) : isEditing ? (
+            'Update Record'
           ) : (
             'Save Record'
           )}
         </Button>
-        <Button type="button" variant="outline" onClick={() => router.back()} disabled={loading}>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => onCancel ? onCancel() : router.back()}
+          disabled={loading}
+        >
           Cancel
         </Button>
       </div>

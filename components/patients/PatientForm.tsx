@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import type { Patient } from '@/types'
 import { patientSchema, type PatientFormData } from '@/lib/validations/patient'
-import { Camera, Loader2, X, Plus, Phone } from 'lucide-react'
+import { Camera, Loader2, X, Plus, Phone, Upload } from 'lucide-react'
 
 interface PatientFormProps {
   doctorId: string
@@ -26,8 +26,13 @@ interface PatientFormProps {
 export function PatientForm({ doctorId, patient }: PatientFormProps) {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
   const [loading, setLoading] = useState(false)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [showCamera, setShowCamera] = useState(false)
+  const [isUnder18, setIsUnder18] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(patient?.avatar_url || null)
   const [loadingMrn, setLoadingMrn] = useState(!patient)
@@ -43,8 +48,8 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
     city: patient?.city || '',
     state: patient?.state || '',
     postal_code: patient?.postal_code || '',
-    emergency_contact_name: patient?.emergency_contact_name || '',
-    emergency_contact_phone: patient?.emergency_contact_phone || '',
+    parent_guardian_name: (patient as any)?.parent_guardian_name || '',
+    parent_guardian_phone: (patient as any)?.parent_guardian_phone || '',
     medical_record_number: patient?.medical_record_number || '',
     notes: patient?.notes || '',
   })
@@ -66,6 +71,125 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
     const newPhones = [...(formData.phone_numbers || [])]
     newPhones[index] = value
     setFormData({ ...formData, phone_numbers: newPhones, phone: newPhones[0] || '' })
+  }
+
+  const calculateAge = (dob: string): number => {
+    if (!dob) return 0
+    const birthDate = new Date(dob)
+    const today = new Date()
+    let age = today.getFullYear() - birthDate.getFullYear()
+    const monthDiff = today.getMonth() - birthDate.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--
+    }
+    return age
+  }
+
+  useEffect(() => {
+    const age = calculateAge(formData.date_of_birth || '')
+    setIsUnder18(age > 0 && age < 18)
+  }, [formData.date_of_birth])
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [])
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: 640, height: 480 }
+      })
+      streamRef.current = stream
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+      setShowCamera(true)
+    } catch (err) {
+      setError('Unable to access camera. Please check permissions.')
+    }
+  }
+
+  const capturePhoto = async () => {
+    if (!videoRef.current || !canvasRef.current) return
+
+    const canvas = canvasRef.current
+    const video = videoRef.current
+    canvas.width = video.videoWidth
+    canvas.height = video.videoHeight
+    const ctx = canvas.getContext('2d')
+    if (ctx) {
+      ctx.drawImage(video, 0, 0)
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const file = new File([blob], 'camera-photo.jpg', { type: 'image/jpeg' })
+          await handleAvatarUploadFile(file)
+        }
+      }, 'image/jpeg', 0.9)
+    }
+    stopCamera()
+  }
+
+  const stopCamera = () => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    setShowCamera(false)
+  }
+
+  const handleAvatarUploadFile = async (file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setError('Please select an image file')
+      return
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError('Image must be less than 5MB')
+      return
+    }
+
+    setUploadingAvatar(true)
+    setError(null)
+
+    try {
+      const supabase = createClient()
+      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
+      const filePath = `${doctorId}/${patient?.id || 'new'}/${fileName}`
+
+      if (avatarUrl) {
+        const oldPath = avatarUrl.split('/patient-avatars/')[1]
+        if (oldPath) {
+          await supabase.storage.from('patient-avatars').remove([oldPath])
+        }
+      }
+
+      const { error: uploadError } = await supabase.storage
+        .from('patient-avatars')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: urlData } = supabase.storage
+        .from('patient-avatars')
+        .getPublicUrl(filePath)
+
+      setAvatarUrl(urlData.publicUrl)
+
+      if (patient) {
+        await supabase
+          .from('patients')
+          .update({ avatar_url: urlData.publicUrl })
+          .eq('id', patient.id)
+        router.refresh()
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to upload image')
+    } finally {
+      setUploadingAvatar(false)
+    }
   }
 
   // Auto-generate MRN for new patients
@@ -121,60 +245,7 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (!file) return
-
-    // Validate file
-    if (!file.type.startsWith('image/')) {
-      setError('Please select an image file')
-      return
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      setError('Image must be less than 5MB')
-      return
-    }
-
-    setUploadingAvatar(true)
-    setError(null)
-
-    try {
-      const supabase = createClient()
-      const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
-      const filePath = `${doctorId}/${patient?.id || 'new'}/${fileName}`
-
-      // Delete old avatar if exists
-      if (avatarUrl) {
-        const oldPath = avatarUrl.split('/patient-avatars/')[1]
-        if (oldPath) {
-          await supabase.storage.from('patient-avatars').remove([oldPath])
-        }
-      }
-
-      // Upload new avatar
-      const { error: uploadError } = await supabase.storage
-        .from('patient-avatars')
-        .upload(filePath, file)
-
-      if (uploadError) throw uploadError
-
-      const { data: urlData } = supabase.storage
-        .from('patient-avatars')
-        .getPublicUrl(filePath)
-
-      setAvatarUrl(urlData.publicUrl)
-
-      // If editing existing patient, update immediately
-      if (patient) {
-        await supabase
-          .from('patients')
-          .update({ avatar_url: urlData.publicUrl })
-          .eq('id', patient.id)
-        router.refresh()
-      }
-    } catch (err: any) {
-      setError(err.message || 'Failed to upload image')
-    } finally {
-      setUploadingAvatar(false)
-    }
+    if (file) await handleAvatarUploadFile(file)
   }
 
   const removeAvatar = async () => {
@@ -257,57 +328,94 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Profile Picture */}
-      <div className="flex items-center gap-6">
-        <div className="relative">
-          <div
-            className="h-24 w-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {uploadingAvatar ? (
-              <Loader2 className="h-8 w-8 animate-spin" />
-            ) : avatarUrl ? (
-              <img
-                src={avatarUrl}
-                alt={formData.full_name}
-                className="h-full w-full object-cover"
-              />
-            ) : (
-              initials || <Camera className="h-8 w-8" />
-            )}
-          </div>
-          {avatarUrl && !uploadingAvatar && (
-            <button
-              type="button"
-              onClick={removeAvatar}
-              className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-white flex items-center justify-center hover:bg-destructive/90"
+      <div className="space-y-4">
+        <div className="flex items-center gap-6">
+          <div className="relative">
+            <div
+              className="h-24 w-24 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
+              onClick={() => !showCamera && fileInputRef.current?.click()}
             >
-              <X className="h-4 w-4" />
-            </button>
-          )}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            onChange={handleAvatarUpload}
-            className="hidden"
-          />
+              {uploadingAvatar ? (
+                <Loader2 className="h-8 w-8 animate-spin" />
+              ) : avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={formData.full_name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                initials || <Camera className="h-8 w-8" />
+              )}
+            </div>
+            {avatarUrl && !uploadingAvatar && (
+              <button
+                type="button"
+                onClick={removeAvatar}
+                className="absolute -top-1 -right-1 h-6 w-6 rounded-full bg-destructive text-white flex items-center justify-center hover:bg-destructive/90"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+          </div>
+          <div>
+            <h3 className="font-medium">Profile Picture</h3>
+            <p className="text-sm text-muted-foreground">
+              Upload or take a photo (max 5MB)
+            </p>
+            <div className="flex gap-2 mt-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingAvatar || showCamera}
+              >
+                <Upload className="h-4 w-4 mr-1" />
+                Upload
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={startCamera}
+                disabled={uploadingAvatar || showCamera}
+              >
+                <Camera className="h-4 w-4 mr-1" />
+                Camera
+              </Button>
+            </div>
+          </div>
         </div>
-        <div>
-          <h3 className="font-medium">Profile Picture</h3>
-          <p className="text-sm text-muted-foreground">
-            Click to upload a photo (max 5MB)
-          </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="mt-2"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploadingAvatar}
-          >
-            {uploadingAvatar ? 'Uploading...' : 'Change Photo'}
-          </Button>
-        </div>
+
+        {/* Camera View */}
+        {showCamera && (
+          <div className="space-y-3 p-4 bg-muted rounded-lg">
+            <video
+              ref={videoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full max-w-md mx-auto rounded-lg"
+            />
+            <canvas ref={canvasRef} className="hidden" />
+            <div className="flex justify-center gap-2">
+              <Button type="button" onClick={capturePhoto}>
+                <Camera className="h-4 w-4 mr-1" />
+                Capture
+              </Button>
+              <Button type="button" variant="outline" onClick={stopCamera}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Basic Information */}
@@ -362,6 +470,11 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
               }
               disabled={loading}
             />
+            {isUnder18 && (
+              <p className="text-xs text-orange-600">
+                Patient is under 18 - Parent/Guardian information required below
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -501,53 +614,65 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
         </div>
       </div>
 
-      {/* Emergency Contact */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Emergency Contact</h3>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="space-y-2">
-            <Label htmlFor="emergency_contact_name">Contact Name</Label>
-            <Input
-              id="emergency_contact_name"
-              value={formData.emergency_contact_name}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  emergency_contact_name: e.target.value,
-                })
-              }
-              disabled={loading}
-            />
-          </div>
+      {/* Parent/Guardian Information - Only for patients under 18 */}
+      {isUnder18 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">
+            Parent/Guardian Information <span className="text-destructive">*</span>
+          </h3>
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="parent_guardian_name">
+                Parent/Guardian Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="parent_guardian_name"
+                value={formData.parent_guardian_name}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    parent_guardian_name: e.target.value,
+                  })
+                }
+                placeholder="Parent or Guardian Name"
+                disabled={loading}
+                required
+              />
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="emergency_contact_phone">Contact Phone</Label>
-            <Input
-              id="emergency_contact_phone"
-              type="tel"
-              value={formData.emergency_contact_phone}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  emergency_contact_phone: e.target.value,
-                })
-              }
-              disabled={loading}
-            />
+            <div className="space-y-2">
+              <Label htmlFor="parent_guardian_phone">
+                Parent/Guardian Phone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="parent_guardian_phone"
+                type="tel"
+                value={formData.parent_guardian_phone}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    parent_guardian_phone: e.target.value,
+                  })
+                }
+                placeholder="+1 (555) 987-6543"
+                disabled={loading}
+                required
+              />
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
-      {/* Notes */}
+      {/* Reason for Visit */}
       <div className="space-y-2">
-        <Label htmlFor="notes">Notes</Label>
+        <Label htmlFor="notes">Reason for Visit</Label>
         <Textarea
           id="notes"
           value={formData.notes}
           onChange={(e) =>
             setFormData({ ...formData, notes: e.target.value })
           }
-          placeholder="Additional notes or medical information..."
+          placeholder="Please describe your reason for visiting..."
           rows={4}
           disabled={loading}
         />

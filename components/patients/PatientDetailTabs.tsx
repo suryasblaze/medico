@@ -15,13 +15,15 @@ import { User, Activity, Plus, Pencil, Eye } from 'lucide-react'
 interface PatientDetailTabsProps {
   patient: Patient
   doctorId: string
+  doctorEmail: string
   medicalRecords: MedicalRecord[]
   documents: PatientDocument[]
 }
 
-export function PatientDetailTabs({ patient, doctorId, medicalRecords, documents }: PatientDetailTabsProps) {
+export function PatientDetailTabs({ patient, doctorId, doctorEmail, medicalRecords, documents }: PatientDetailTabsProps) {
   const [showRecordForm, setShowRecordForm] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
+  const [editingRecord, setEditingRecord] = useState<MedicalRecord | null>(null)
 
   // Filter documents by type
   const patientDocs = documents.filter(d => !d.medical_record_id)
@@ -98,7 +100,7 @@ export function PatientDetailTabs({ patient, doctorId, medicalRecords, documents
 
       {/* Medical Records Tab */}
       <TabsContent value="records" className="space-y-4">
-        {!showRecordForm ? (
+        {!showRecordForm && !editingRecord ? (
           <>
             <div className="flex justify-between items-center">
               <div>
@@ -110,8 +112,36 @@ export function PatientDetailTabs({ patient, doctorId, medicalRecords, documents
                 Add Visit Record
               </Button>
             </div>
-            <MedicalRecordsList records={medicalRecords} documents={recordDocs} />
+            <MedicalRecordsList
+              records={medicalRecords}
+              documents={recordDocs}
+              doctorEmail={doctorEmail}
+              onEditRecord={(record) => setEditingRecord(record)}
+            />
           </>
+        ) : editingRecord ? (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Pencil className="h-5 w-5 text-fuchsia-600" />
+                    Edit Medical Record
+                  </CardTitle>
+                  <CardDescription>Update visit record from {new Date(editingRecord.visit_date).toLocaleDateString()}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <MedicalRecordForm
+                patientId={patient.id}
+                doctorId={doctorId}
+                record={editingRecord}
+                onSuccess={() => setEditingRecord(null)}
+                onCancel={() => setEditingRecord(null)}
+              />
+            </CardContent>
+          </Card>
         ) : (
           <Card>
             <CardHeader>
@@ -130,6 +160,7 @@ export function PatientDetailTabs({ patient, doctorId, medicalRecords, documents
                 patientId={patient.id}
                 doctorId={doctorId}
                 onSuccess={() => setShowRecordForm(false)}
+                onCancel={() => setShowRecordForm(false)}
               />
             </CardContent>
           </Card>

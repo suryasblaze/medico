@@ -16,7 +16,12 @@ import {
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search, Eye, Mail, Phone } from 'lucide-react'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Search, Eye, Mail, Phone, User } from 'lucide-react'
 
 interface PatientsListProps {
   patients: Patient[]
@@ -125,6 +130,7 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
         <Table>
           <TableHeader>
             <TableRow>
+              <TableHead className="w-16">Photo</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Date of Birth</TableHead>
@@ -136,13 +142,54 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
           <TableBody>
             {paginatedPatients.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center text-muted-foreground">
+                <TableCell colSpan={7} className="text-center text-muted-foreground">
                   No patients found matching your search
                 </TableCell>
               </TableRow>
             ) : (
-              paginatedPatients.map((patient) => (
+              paginatedPatients.map((patient) => {
+                const initials = patient.full_name
+                  .split(' ')
+                  .map((n) => n[0])
+                  .join('')
+                  .toUpperCase()
+                  .slice(0, 2)
+
+                return (
                 <TableRow key={patient.id}>
+                  <TableCell>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <div className="h-10 w-10 rounded-full bg-fuchsia-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
+                          {patient.avatar_url ? (
+                            <img
+                              src={patient.avatar_url}
+                              alt={patient.full_name}
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            initials || <User className="h-5 w-5" />
+                          )}
+                        </div>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-2" side="right">
+                        <div className="flex flex-col items-center gap-2">
+                          <div className="h-32 w-32 rounded-lg bg-fuchsia-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
+                            {patient.avatar_url ? (
+                              <img
+                                src={patient.avatar_url}
+                                alt={patient.full_name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              initials || <User className="h-12 w-12" />
+                            )}
+                          </div>
+                          <p className="text-sm font-medium">{patient.full_name}</p>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </TableCell>
                   <TableCell className="font-medium">
                     {patient.full_name}
                     {patient.gender && (
@@ -187,7 +234,7 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
                     </Link>
                   </TableCell>
                 </TableRow>
-              ))
+              )})
             )}
           </TableBody>
         </Table>

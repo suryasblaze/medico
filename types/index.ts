@@ -27,8 +27,8 @@ export interface Patient {
   city?: string
   state?: string
   postal_code?: string
-  emergency_contact_name?: string
-  emergency_contact_phone?: string
+  parent_guardian_name?: string
+  parent_guardian_phone?: string
   medical_record_number?: string
   notes?: string
   allergies?: string
@@ -203,6 +203,9 @@ export interface Expense {
   amount: number
   category?: string
   expense_date: string
+  attachment_url?: string
+  attachment_name?: string
+  attachment_type?: string
   created_at: string
   updated_at: string
 }

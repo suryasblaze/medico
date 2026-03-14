@@ -2,14 +2,27 @@
 
 import { useState } from 'react'
 import { MedicalRecord, PatientDocument } from '@/types'
+import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Calendar, FileText, ChevronDown, ChevronUp, Paperclip, Eye, FileImage, File } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { Calendar, FileText, ChevronDown, ChevronUp, Paperclip, Eye, FileImage, File, Pencil, Loader2, Lock } from 'lucide-react'
 import { formatDateShort } from '@/lib/utils/formatters'
 
 interface MedicalRecordsListProps {
   records: MedicalRecord[]
   documents?: PatientDocument[]
+  onEditRecord?: (record: MedicalRecord) => void
+  doctorEmail?: string
 }
 
 function getFileIcon(fileType: string) {
@@ -18,11 +31,59 @@ function getFileIcon(fileType: string) {
   return <File className="h-4 w-4 text-gray-600" />
 }
 
-export function MedicalRecordsList({ records, documents = [] }: MedicalRecordsListProps) {
+export function MedicalRecordsList({ records, documents = [], onEditRecord, doctorEmail }: MedicalRecordsListProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false)
+  const [selectedRecord, setSelectedRecord] = useState<MedicalRecord | null>(null)
+  const [password, setPassword] = useState('')
+  const [verifying, setVerifying] = useState(false)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
 
   const getRecordDocuments = (recordId: string) => {
     return documents.filter(d => d.medical_record_id === recordId)
+  }
+
+  const handleEditClick = (record: MedicalRecord, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setSelectedRecord(record)
+    setPassword('')
+    setPasswordError(null)
+    setShowPasswordDialog(true)
+  }
+
+  const verifyPassword = async () => {
+    if (!password.trim()) {
+      setPasswordError('Please enter your password')
+      return
+    }
+
+    setVerifying(true)
+    setPasswordError(null)
+
+    try {
+      const supabase = createClient()
+
+      // Try to sign in with the current user's email and provided password
+      const { error } = await supabase.auth.signInWithPassword({
+        email: doctorEmail || '',
+        password: password,
+      })
+
+      if (error) {
+        setPasswordError('Incorrect password. Please try again.')
+        return
+      }
+
+      // Password verified, proceed to edit
+      setShowPasswordDialog(false)
+      if (selectedRecord && onEditRecord) {
+        onEditRecord(selectedRecord)
+      }
+    } catch (err) {
+      setPasswordError('Verification failed. Please try again.')
+    } finally {
+      setVerifying(false)
+    }
   }
 
   if (records.length === 0) {
@@ -77,9 +138,21 @@ export function MedicalRecordsList({ records, documents = [] }: MedicalRecordsLi
                     </p>
                   )}
                 </div>
-                <Button variant="ghost" size="sm">
-                  {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
+                <div className="flex items-center gap-1">
+                  {onEditRecord && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleEditClick(record, e)}
+                      title="Edit Record"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                  )}
+                  <Button variant="ghost" size="sm">
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </Button>
+                </div>
               </div>
             </CardHeader>
 
@@ -133,6 +206,62 @@ export function MedicalRecordsList({ records, documents = [] }: MedicalRecordsLi
           </Card>
         )
       })}
+
+      {/* Password Verification Dialog */}
+      <Dialog open={showPasswordDialog} onOpenChange={setShowPasswordDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-fuchsia-600" />
+              Password Required
+            </DialogTitle>
+            <DialogDescription>
+              Enter your login password to edit this medical record.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <Input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    verifyPassword()
+                  }
+                }}
+                disabled={verifying}
+              />
+            </div>
+            {passwordError && (
+              <p className="text-sm text-destructive">{passwordError}</p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPasswordDialog(false)}
+              disabled={verifying}
+            >
+              Cancel
+            </Button>
+            <Button onClick={verifyPassword} disabled={verifying}>
+              {verifying ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Verifying...
+                </>
+              ) : (
+                'Verify & Edit'
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

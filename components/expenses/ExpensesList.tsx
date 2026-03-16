@@ -70,6 +70,7 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
   const [editDate, setEditDate] = useState('')
   const [editFile, setEditFile] = useState<File | null>(null)
   const [existingAttachment, setExistingAttachment] = useState<string | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
 
   // Get unique categories for coloring
   const uniqueCategories = [...new Set(expenses.map(e => e.category || 'Uncategorized').filter(Boolean))]
@@ -107,12 +108,13 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
     const fileName = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`
     const filePath = `${doctorId}/expenses/${fileName}`
 
-    const { error: uploadError } = await supabase.storage
+    const { error: storageError } = await supabase.storage
       .from('expense-attachments')
       .upload(filePath, file)
 
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
+    if (storageError) {
+      console.error('Upload error:', storageError)
+      setUploadError(`Upload failed: ${storageError.message}`)
       return null
     }
 
@@ -120,6 +122,7 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
       .from('expense-attachments')
       .getPublicUrl(filePath)
 
+    setUploadError(null)
     return {
       url: urlData.publicUrl,
       name: file.name,
@@ -139,6 +142,10 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
         setUploading(true)
         attachmentData = await uploadFile(selectedFile)
         setUploading(false)
+        if (!attachmentData) {
+          setLoading(false)
+          return // Upload failed, error message already set
+        }
       }
 
       const { error } = await supabase.from('expenses').insert({
@@ -187,6 +194,10 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
         setUploading(true)
         attachmentData = await uploadFile(editFile)
         setUploading(false)
+        if (!attachmentData) {
+          setLoading(false)
+          return // Upload failed, error message already set
+        }
       }
 
       const updateData: any = {
@@ -290,6 +301,16 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
           </Button>
         </CardHeader>
         <CardContent>
+          {/* Upload Error */}
+          {uploadError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center justify-between">
+              <span>{uploadError}</span>
+              <button onClick={() => setUploadError(null)} className="text-red-500 hover:text-red-700">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
+
           {/* Search */}
           <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />

@@ -22,6 +22,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover'
 import { Search, Eye, Mail, Phone, User } from 'lucide-react'
+import { AvatarImage } from '@/components/ui/optimized-image'
 
 interface PatientsListProps {
   patients: Patient[]
@@ -160,31 +161,24 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
                   <TableCell>
                     <Popover>
                       <PopoverTrigger asChild>
-                        <div className="h-10 w-10 rounded-full bg-fuchsia-600 flex items-center justify-center text-white text-sm font-medium overflow-hidden cursor-pointer hover:opacity-80 transition-opacity">
-                          {patient.avatar_url ? (
-                            <img
-                              src={patient.avatar_url}
-                              alt={patient.full_name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            initials || <User className="h-5 w-5" />
-                          )}
+                        <div className="cursor-pointer hover:opacity-80 transition-opacity">
+                          <AvatarImage
+                            src={patient.avatar_url}
+                            alt={patient.full_name}
+                            size={40}
+                            fallback={initials}
+                          />
                         </div>
                       </PopoverTrigger>
                       <PopoverContent className="w-auto p-2" side="right">
                         <div className="flex flex-col items-center gap-2">
-                          <div className="h-32 w-32 rounded-lg bg-fuchsia-600 flex items-center justify-center text-white text-3xl font-bold overflow-hidden">
-                            {patient.avatar_url ? (
-                              <img
-                                src={patient.avatar_url}
-                                alt={patient.full_name}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : (
-                              initials || <User className="h-12 w-12" />
-                            )}
-                          </div>
+                          <AvatarImage
+                            src={patient.avatar_url}
+                            alt={patient.full_name}
+                            size={128}
+                            fallback={initials}
+                            className="rounded-lg"
+                          />
                           <p className="text-sm font-medium">{patient.full_name}</p>
                         </div>
                       </PopoverContent>

@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Plus, Trash2, Edit2, Check, X, IndianRupee, Search, Paperclip, FileText, FileImage, File, Eye, Loader2 } from 'lucide-react'
+import Image from 'next/image'
 import type { Expense } from '@/types'
 
 interface ExpensesListProps {
@@ -602,11 +603,14 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
             {viewingExpense?.attachment_url && (
               <div className="space-y-4">
                 {viewingExpense.attachment_type?.startsWith('image/') ? (
-                  <div className="flex justify-center">
-                    <img
+                  <div className="flex justify-center relative" style={{ height: '60vh' }}>
+                    <Image
                       src={viewingExpense.attachment_url}
                       alt={viewingExpense.attachment_name || 'Attachment'}
-                      className="max-h-[60vh] rounded-lg object-contain"
+                      fill
+                      className="rounded-lg object-contain"
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      priority
                     />
                   </div>
                 ) : viewingExpense.attachment_type === 'application/pdf' ? (

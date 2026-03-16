@@ -17,6 +17,7 @@ import {
 import type { Patient } from '@/types'
 import { patientSchema, type PatientFormData } from '@/lib/validations/patient'
 import { Camera, Loader2, X, Plus, Phone, Upload } from 'lucide-react'
+import { AvatarImage } from '@/components/ui/optimized-image'
 
 interface PatientFormProps {
   doctorId: string

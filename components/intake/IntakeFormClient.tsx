@@ -27,10 +27,21 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [showCamera, setShowCamera] = useState(false)
   const [isUnder18, setIsUnder18] = useState(false)
+  const [pendingStream, setPendingStream] = useState<MediaStream | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  // Set video stream after video element renders
+  useEffect(() => {
+    if (showCamera && pendingStream && videoRef.current) {
+      videoRef.current.srcObject = pendingStream
+      videoRef.current.play().catch(console.error)
+      streamRef.current = pendingStream
+      setPendingStream(null)
+    }
+  }, [showCamera, pendingStream])
   const [formData, setFormData] = useState({
     full_name: '',
     date_of_birth: '',
@@ -139,12 +150,10 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'user', width: 640, height: 480 }
       })
-      streamRef.current = stream
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-      }
+      setPendingStream(stream)
       setShowCamera(true)
     } catch (err) {
+      console.error('Camera error:', err)
       alert('Unable to access camera. Please check permissions.')
     }
   }
@@ -173,6 +182,10 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
+    }
+    if (pendingStream) {
+      pendingStream.getTracks().forEach(track => track.stop())
+      setPendingStream(null)
     }
     setShowCamera(false)
   }

@@ -4,23 +4,13 @@ import { useState, useRef } from 'react'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Save, Download, Trash2, Loader2, Plus, X, Pencil, Check } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-
-interface Patient {
-  id: string
-  full_name: string
-}
+import { Download, Trash2, Loader2, Plus, X, Pencil, Check } from 'lucide-react'
 
 interface PrescriptionFormProps {
   doctorId: string
-  patients: Patient[]
 }
 
-export function PrescriptionForm({ doctorId, patients }: PrescriptionFormProps) {
-  const prescriptionRef = useRef<HTMLDivElement>(null)
-  const [saving, setSaving] = useState(false)
+export function PrescriptionForm({ doctorId }: PrescriptionFormProps) {
   const [downloading, setDownloading] = useState(false)
   const [editingHeader, setEditingHeader] = useState(false)
 
@@ -36,8 +26,7 @@ export function PrescriptionForm({ doctorId, patients }: PrescriptionFormProps) 
     closedDay: 'Sunday Closed',
   })
 
-  const [formData, setFormData] = useState<Record<string, string>>({
-    patientId: '',
+  const [formData, setFormData] = useState({
     patientName: '',
     patientAge: '',
     prescriptionDate: new Date().toISOString().split('T')[0],
@@ -69,130 +58,249 @@ export function PrescriptionForm({ doctorId, patients }: PrescriptionFormProps) 
     setSections(prev => prev.map(s => s.id === id ? { ...s, [field]: value } : s))
   }
 
-  const handlePatientSelect = (patientId: string) => {
-    const patient = patients.find(p => p.id === patientId)
-    setFormData(prev => ({
-      ...prev,
-      patientId,
-      patientName: patient?.full_name || '',
-    }))
-  }
-
   const handleChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
   }
 
-  const handleSave = async () => {
-    const filledSections = sections.filter(s => s.medicine.trim())
-    if (!formData.patientName || filledSections.length === 0) {
-      alert('Please enter patient name and at least one medicine')
-      return
-    }
-
-    // Build prescription text from sections
-    const prescriptionText = filledSections
-      .map((s, i) => `${i + 1}. ${s.medicine}`)
-      .join('\n')
-
-    const timingM = filledSections.map(s => s.m || '-').join(',')
-    const timingA = filledSections.map(s => s.a || '-').join(',')
-    const timingN = filledSections.map(s => s.n || '-').join(',')
-
-    setSaving(true)
-    try {
-      const supabase = createClient()
-      const { error } = await supabase.from('prescriptions').insert({
-        doctor_id: doctorId,
-        patient_id: formData.patientId || null,
-        patient_name: formData.patientName,
-        patient_age: formData.patientAge,
-        prescription_date: formData.prescriptionDate,
-        bp: formData.bp,
-        sugar: formData.sugar,
-        pulse: formData.pulse,
-        prescription_text: prescriptionText,
-        timing_morning: timingM,
-        timing_afternoon: timingA,
-        timing_night: timingN,
-      })
-
-      if (error) throw error
-      alert('Prescription saved successfully!')
-      window.location.reload()
-    } catch (error) {
-      console.error('Error saving prescription:', error)
-      alert('Failed to save prescription')
-    } finally {
-      setSaving(false)
-    }
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr)
+    return date.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' })
   }
 
   const handleDownloadPDF = () => {
-    if (!prescriptionRef.current) return
-
     setDownloading(true)
     try {
-      // Clone the prescription content
-      const content = prescriptionRef.current.cloneNode(true) as HTMLElement
-
-      // Remove edit buttons and interactive elements for print
-      content.querySelectorAll('button').forEach(btn => btn.remove())
-      content.querySelectorAll('[class*="resize"]').forEach(el => {
-        (el as HTMLElement).style.resize = 'none'
-      })
-
-      // Replace input/textarea with their values
-      content.querySelectorAll('input').forEach(input => {
-        const span = document.createElement('span')
-        span.textContent = (input as HTMLInputElement).value || ''
-        span.style.cssText = 'display: inline-block; min-width: 20px;'
-        input.parentNode?.replaceChild(span, input)
-      })
-
-      content.querySelectorAll('textarea').forEach(textarea => {
-        const div = document.createElement('div')
-        div.textContent = (textarea as HTMLTextAreaElement).value || ''
-        div.style.cssText = 'white-space: pre-wrap;'
-        textarea.parentNode?.replaceChild(div, textarea)
-      })
-
       const printWindow = window.open('', '_blank')
 
       if (printWindow) {
+        const medicineRows = sections
+          .filter(s => s.medicine.trim())
+          .map((s, i) => `
+            <tr>
+              <td style="width: 40px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #fdf4ff;">
+                ${i === 0 ? '<span style="font-family: serif; font-style: italic; font-size: 18px; font-weight: bold; color: #a855f7;">Rx</span>' : `<span style="color: #888;">${i + 1}.</span>`}
+              </td>
+              <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">${s.medicine}</td>
+              <td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #fdf4ff;">${s.m || ''}</td>
+              <td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #fff7ed;">${s.a || ''}</td>
+              <td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #faf5ff;">${s.n || ''}</td>
+            </tr>
+          `).join('')
+
         printWindow.document.write(`
           <!DOCTYPE html>
           <html>
           <head>
             <title>Prescription - ${formData.patientName || 'Patient'}</title>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
             <style>
               * { margin: 0; padding: 0; box-sizing: border-box; }
               body {
-                font-family: 'Inter', 'Segoe UI', sans-serif;
+                font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
                 background: white;
-                padding: 15px;
-                font-size: 14px;
+                padding: 20px;
+                font-size: 13px;
                 line-height: 1.4;
+                color: #333;
               }
-              img { max-width: 100%; height: auto; }
+              .container {
+                max-width: 210mm;
+                margin: 0 auto;
+                border: 1px solid #e0e0e0;
+                padding: 20px;
+              }
+              .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 15px;
+              }
+              .logo-section img {
+                height: 50px;
+                margin-bottom: 8px;
+              }
+              .doctor-info {
+                margin-top: 5px;
+              }
+              .doctor-name {
+                font-size: 14px;
+                font-weight: 600;
+                color: #333;
+              }
+              .doctor-credentials {
+                font-size: 11px;
+                color: #666;
+              }
+              .doctor-specialty {
+                font-size: 11px;
+                color: #a855f7;
+                font-weight: 500;
+              }
+              .contact-info {
+                text-align: right;
+                font-size: 12px;
+              }
+              .contact-info .label {
+                color: #999;
+                font-size: 10px;
+              }
+              .contact-info .value {
+                color: #333;
+                font-weight: 500;
+              }
+              .address {
+                font-size: 11px;
+                color: #666;
+                margin-top: 5px;
+                white-space: pre-line;
+              }
+              .divider {
+                height: 2px;
+                background: linear-gradient(to right, #a855f7, #8b5cf6, #f97316);
+                border-radius: 2px;
+                margin: 15px 0;
+              }
+              .patient-row, .vitals-row {
+                display: flex;
+                border: 1px solid #e5e5e5;
+                border-radius: 6px;
+                overflow: hidden;
+                margin-bottom: 10px;
+              }
+              .field-label {
+                background: #f9fafb;
+                padding: 8px 12px;
+                font-size: 11px;
+                font-weight: 600;
+                color: #555;
+                border-right: 1px solid #e5e5e5;
+                display: flex;
+                align-items: center;
+              }
+              .field-value {
+                padding: 8px 12px;
+                flex: 1;
+                border-right: 1px solid #e5e5e5;
+                font-size: 13px;
+              }
+              .field-value:last-child {
+                border-right: none;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 15px;
+              }
+              th {
+                padding: 8px 4px;
+                font-size: 11px;
+                font-weight: 600;
+                border: 1px solid #e5e5e5;
+                background: #f9fafb;
+              }
+              .timing-header {
+                font-size: 10px;
+                font-weight: bold;
+              }
+              .timing-sub {
+                font-size: 8px;
+                color: #888;
+                display: block;
+              }
+              .th-m { background: #fdf4ff; color: #a855f7; }
+              .th-a { background: #fff7ed; color: #ea580c; }
+              .th-n { background: #faf5ff; color: #7c3aed; }
+              .footer {
+                margin-top: 20px;
+                padding-top: 15px;
+                border-top: 1px solid #e5e5e5;
+                text-align: center;
+                font-size: 11px;
+                color: #666;
+              }
+              .footer .hours {
+                color: #555;
+              }
+              .footer .closed {
+                color: #dc2626;
+                font-weight: 600;
+                margin-top: 3px;
+              }
               @media print {
-                body {
-                  -webkit-print-color-adjust: exact;
-                  print-color-adjust: exact;
-                  padding: 0;
-                }
-                @page { margin: 8mm; }
+                body { padding: 0; }
+                .container { border: none; }
+                @page { margin: 10mm; }
               }
-              /* Hide scrollbars and resize handles */
-              ::-webkit-scrollbar { display: none; }
-              * { scrollbar-width: none; }
             </style>
           </head>
           <body>
-            ${content.outerHTML}
+            <div class="container">
+              <div class="header">
+                <div class="logo-section">
+                  <img src="/logo.png" alt="VR Dental Care" onerror="this.style.display='none'"/>
+                  <div class="doctor-info">
+                    <div class="doctor-name">${headerData.doctorName} <span class="doctor-credentials">${headerData.credentials}</span></div>
+                    <div class="doctor-specialty">${headerData.specialty}</div>
+                  </div>
+                </div>
+                <div class="contact-info">
+                  <div><span class="label">Mobile: </span><span class="value">${headerData.mobile}</span></div>
+                  <div><span class="label">Phone: </span><span class="value">${headerData.phone}</span></div>
+                  <div class="address">${headerData.address}</div>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="patient-row">
+                <div class="field-label" style="width: 50px;">Name</div>
+                <div class="field-value" style="flex: 2;">${formData.patientName}</div>
+                <div class="field-label" style="width: 40px;">Age</div>
+                <div class="field-value" style="width: 60px;">${formData.patientAge}</div>
+                <div class="field-label" style="width: 40px;">Date</div>
+                <div class="field-value" style="width: 90px;">${formatDate(formData.prescriptionDate)}</div>
+              </div>
+
+              <div class="vitals-row">
+                <div class="field-label" style="width: 35px;">BP</div>
+                <div class="field-value">${formData.bp || '-'}</div>
+                <div class="field-label" style="width: 45px;">Sugar</div>
+                <div class="field-value">${formData.sugar || '-'}</div>
+                <div class="field-label" style="width: 40px;">Pulse</div>
+                <div class="field-value">${formData.pulse || '-'}</div>
+              </div>
+
+              <table>
+                <thead>
+                  <tr>
+                    <th style="width: 40px;"></th>
+                    <th style="text-align: left; padding-left: 12px;">Medicine / Instructions</th>
+                    <th class="th-m" style="width: 50px;">
+                      <span class="timing-header">M</span>
+                      <span class="timing-sub">காலை</span>
+                    </th>
+                    <th class="th-a" style="width: 50px;">
+                      <span class="timing-header">A</span>
+                      <span class="timing-sub">மதியம்</span>
+                    </th>
+                    <th class="th-n" style="width: 50px;">
+                      <span class="timing-header">N</span>
+                      <span class="timing-sub">இரவு</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${medicineRows || '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #999; border: 1px solid #e5e5e5;">No medicines added</td></tr>'}
+                </tbody>
+              </table>
+
+              <div class="footer">
+                <div class="hours">${headerData.clinicHours}</div>
+                <div class="closed">${headerData.closedDay}</div>
+              </div>
+            </div>
             <script>
               window.onload = function() {
-                setTimeout(function() { window.print(); }, 400);
+                setTimeout(function() { window.print(); }, 300);
               };
             </script>
           </body>
@@ -211,7 +319,6 @@ export function PrescriptionForm({ doctorId, patients }: PrescriptionFormProps) 
   const handleClear = () => {
     if (confirm('Are you sure you want to clear all fields?')) {
       setFormData({
-        patientId: '',
         patientName: '',
         patientAge: '',
         prescriptionDate: new Date().toISOString().split('T')[0],
@@ -236,26 +343,18 @@ export function PrescriptionForm({ doctorId, patients }: PrescriptionFormProps) 
           Clear
         </Button>
         <Button
-          onClick={handleSave}
-          disabled={saving}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white"
-        >
-          {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-          {saving ? 'Saving...' : 'Save'}
-        </Button>
-        <Button
           onClick={handleDownloadPDF}
           disabled={downloading}
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className="bg-gradient-to-r from-fuchsia-600 to-fuchsia-700 hover:from-fuchsia-700 hover:to-fuchsia-800 text-white"
         >
           {downloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-          {downloading ? 'Generating...' : 'Download PDF'}
+          {downloading ? 'Generating...' : 'Print / Download PDF'}
         </Button>
       </div>
 
       {/* Prescription Card */}
       <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden">
-        <div ref={prescriptionRef} className="p-6 md:p-8" style={{ minHeight: '800px' }}>
+        <div className="p-6 md:p-8" style={{ minHeight: '700px' }}>
 
           {/* Header */}
           <div className="relative">
@@ -375,27 +474,12 @@ export function PrescriptionForm({ doctorId, patients }: PrescriptionFormProps) 
               <span className="text-xs font-semibold text-gray-600">Name</span>
             </div>
             <div className="flex-1 bg-white px-3 py-1.5 border-r border-gray-200 min-w-0">
-              {patients.length > 0 ? (
-                <Select value={formData.patientId} onValueChange={handlePatientSelect}>
-                  <SelectTrigger className="border-0 shadow-none h-8 px-0 text-sm">
-                    <SelectValue placeholder="Select patient" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {patients.map(patient => (
-                      <SelectItem key={patient.id} value={patient.id}>
-                        {patient.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  value={formData.patientName}
-                  onChange={(e) => handleChange('patientName', e.target.value)}
-                  placeholder="Patient name"
-                  className="border-0 shadow-none h-8 px-0 text-sm"
-                />
-              )}
+              <Input
+                value={formData.patientName}
+                onChange={(e) => handleChange('patientName', e.target.value)}
+                placeholder="Patient name"
+                className="border-0 shadow-none h-8 px-0 text-sm"
+              />
             </div>
             <div className="bg-gray-50 px-3 py-2.5 flex items-center border-r border-gray-200 w-12 flex-shrink-0">
               <span className="text-xs font-semibold text-gray-600">Age</span>
@@ -448,7 +532,7 @@ export function PrescriptionForm({ doctorId, patients }: PrescriptionFormProps) 
             <div className="bg-gray-50 px-3 py-2.5 flex items-center border-r border-gray-200 w-12 flex-shrink-0">
               <span className="text-xs font-semibold text-gray-600">Pulse</span>
             </div>
-            <div className="flex-1 bg-white px-3 py-1.5 border-r border-gray-200 min-w-0">
+            <div className="flex-1 bg-white px-3 py-1.5 min-w-0">
               <Input
                 value={formData.pulse}
                 onChange={(e) => handleChange('pulse', e.target.value)}

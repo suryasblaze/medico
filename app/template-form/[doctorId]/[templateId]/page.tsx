@@ -45,7 +45,7 @@ export default async function TemplateFormPage({ params }: TemplateFormPageProps
             {template.title}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {doctor.clinic_name || `Dr. ${doctor.full_name}'s Practice`}
+            {doctor.clinic_name || `${doctor.full_name.toLowerCase().startsWith('dr.') || doctor.full_name.toLowerCase().startsWith('dr ') ? '' : 'Dr. '}${doctor.full_name}'s Practice`}
           </p>
         </div>
 
@@ -57,7 +57,7 @@ export default async function TemplateFormPage({ params }: TemplateFormPageProps
                 <Building2 className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg">Dr. {doctor.full_name}</h3>
+                <h3 className="font-semibold text-lg">{doctor.full_name.toLowerCase().startsWith('dr.') || doctor.full_name.toLowerCase().startsWith('dr ') ? '' : 'Dr. '}{doctor.full_name}</h3>
                 <p className="text-sm text-muted-foreground">{doctor.specialty || 'General Dentistry'}</p>
                 {doctor.phone && (
                   <p className="text-sm text-muted-foreground mt-1">

@@ -43,7 +43,7 @@ export default async function IntakeFormPage({ params }: IntakeFormPageProps) {
             New Patient Intake Form
           </h1>
           <p className="text-fuchsia-600/70 dark:text-fuchsia-400/70 mt-2">
-            {doctor.clinic_name || `Dr. ${doctor.full_name}'s Practice`}
+            {doctor.clinic_name || `${doctor.full_name.toLowerCase().startsWith('dr.') || doctor.full_name.toLowerCase().startsWith('dr ') ? '' : 'Dr. '}${doctor.full_name}'s Practice`}
           </p>
         </div>
 
@@ -55,7 +55,7 @@ export default async function IntakeFormPage({ params }: IntakeFormPageProps) {
                 <User className="h-6 w-6 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-lg text-fuchsia-800 dark:text-fuchsia-200">Dr. {doctor.full_name}</h3>
+                <h3 className="font-semibold text-lg text-fuchsia-800 dark:text-fuchsia-200">{doctor.full_name.toLowerCase().startsWith('dr.') || doctor.full_name.toLowerCase().startsWith('dr ') ? '' : 'Dr. '}{doctor.full_name}</h3>
                 <p className="text-sm text-fuchsia-600/70 dark:text-fuchsia-400/70">{doctor.specialty || 'General Dentistry'}</p>
                 {doctor.phone && (
                   <p className="text-sm text-fuchsia-600/70 dark:text-fuchsia-400/70 mt-1">

@@ -5,6 +5,7 @@ import {
   Wallet,
   BarChart3,
   ClipboardList,
+  FileText,
 } from 'lucide-react'
 
 export const navigationItems = [
@@ -43,5 +44,11 @@ export const navigationItems = [
     href: '/intake-forms',
     icon: ClipboardList,
     description: 'New patient submissions',
+  },
+  {
+    title: 'Prescriptions',
+    href: '/prescriptions',
+    icon: FileText,
+    description: 'Write and manage prescriptions',
   },
 ]

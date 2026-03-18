@@ -29,7 +29,7 @@ export default async function DashboardLayout({
   }
 
   // Type-safe doctor object after null check
-  const doctor = doctorData as Pick<Doctor, 'id' | 'full_name' | 'email' | 'avatar_url'>
+  const doctor = doctorData as Pick<Doctor, 'id' | 'full_name' | 'email' | 'avatar_url' | 'clinic_name' | 'specialty' | 'phone'>
 
   return (
     <NotificationProvider doctorId={doctorData.id}>

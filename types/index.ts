@@ -210,6 +210,26 @@ export interface Expense {
   updated_at: string
 }
 
+export interface Prescription {
+  id: string
+  doctor_id: string
+  patient_id?: string
+  patient_name: string
+  patient_age?: string
+  prescription_date: string
+  bp?: string
+  sugar?: string
+  pulse?: string
+  prescription_text: string
+  timing_morning?: string
+  timing_afternoon?: string
+  timing_night?: string
+  created_at: string
+  updated_at: string
+  // Joined data
+  patient?: Patient
+}
+
 export type AppointmentStatus = 'scheduled' | 'completed' | 'cancelled'
 
 export interface Appointment {

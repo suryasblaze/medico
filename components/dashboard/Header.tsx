@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { LogOut, Bell, Calendar, Clock, User, Search } from 'lucide-react'
+import { LogOut, Bell, Calendar, Clock, User, Search, Pencil, Check, X } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Input } from '@/components/ui/input'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,13 +23,21 @@ import { Button } from '@/components/ui/button'
 import type { Doctor, Appointment } from '@/types'
 
 interface HeaderProps {
-  doctor: Pick<Doctor, 'id' | 'full_name' | 'email' | 'avatar_url'>
+  doctor: Pick<Doctor, 'id' | 'full_name' | 'email' | 'avatar_url' | 'clinic_name' | 'specialty' | 'phone'>
 }
 
 export function Header({ doctor }: HeaderProps) {
   const router = useRouter()
   const [todayAppointments, setTodayAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
+  const [editingProfile, setEditingProfile] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [profileData, setProfileData] = useState({
+    full_name: doctor.full_name,
+    clinic_name: doctor.clinic_name || '',
+    specialty: doctor.specialty || '',
+    phone: doctor.phone || '',
+  })
 
   useEffect(() => {
     const fetchTodayAppointments = async () => {
@@ -59,6 +68,37 @@ export function Header({ doctor }: HeaderProps) {
     await supabase.auth.signOut()
     router.push('/login')
     router.refresh()
+  }
+
+  const handleSaveProfile = async () => {
+    setSaving(true)
+    try {
+      const supabase = createClient()
+      const { error } = await supabase
+        .from('doctors')
+        .update(profileData)
+        .eq('id', doctor.id)
+
+      if (error) throw error
+
+      setEditingProfile(false)
+      window.location.reload()
+    } catch (err) {
+      console.error('Failed to update profile:', err)
+      alert('Failed to update profile')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setProfileData({
+      full_name: doctor.full_name,
+      clinic_name: doctor.clinic_name || '',
+      specialty: doctor.specialty || '',
+      phone: doctor.phone || '',
+    })
+    setEditingProfile(false)
   }
 
   const getInitials = (name: string) => {
@@ -234,20 +274,79 @@ export function Header({ doctor }: HeaderProps) {
                 </div>
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl shadow-fuchsia-500/10 border border-fuchsia-100 dark:border-fuchsia-900/50">
+            <DropdownMenuContent align="end" className="w-72 rounded-xl shadow-xl shadow-fuchsia-500/10 border border-fuchsia-100 dark:border-fuchsia-900/50">
               <DropdownMenuLabel className="pb-3">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-12 w-12 ring-2 ring-fuchsia-500/30">
-                    <AvatarImage src={doctor.avatar_url || ''} alt={doctor.full_name} />
-                    <AvatarFallback className="bg-gradient-to-br from-fuchsia-600 to-fuchsia-700 text-white font-bold">
-                      {getInitials(doctor.full_name)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex flex-col">
-                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{doctor.full_name}</p>
-                    <p className="text-xs text-fuchsia-600/70 dark:text-fuchsia-400/70">{doctor.email}</p>
+                {editingProfile ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-semibold text-fuchsia-700">Edit Profile</span>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={handleCancelEdit}
+                          className="p-1 rounded hover:bg-gray-100 text-gray-500"
+                          disabled={saving}
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={handleSaveProfile}
+                          className="p-1 rounded hover:bg-fuchsia-100 text-fuchsia-600"
+                          disabled={saving}
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <Input
+                      value={profileData.full_name}
+                      onChange={(e) => setProfileData(p => ({ ...p, full_name: e.target.value }))}
+                      placeholder="Full Name (e.g., Dr. John Smith)"
+                      className="h-8 text-sm"
+                      disabled={saving}
+                    />
+                    <Input
+                      value={profileData.clinic_name}
+                      onChange={(e) => setProfileData(p => ({ ...p, clinic_name: e.target.value }))}
+                      placeholder="Clinic Name"
+                      className="h-8 text-sm"
+                      disabled={saving}
+                    />
+                    <Input
+                      value={profileData.specialty}
+                      onChange={(e) => setProfileData(p => ({ ...p, specialty: e.target.value }))}
+                      placeholder="Specialty (e.g., Pediatric Dentist)"
+                      className="h-8 text-sm"
+                      disabled={saving}
+                    />
+                    <Input
+                      value={profileData.phone}
+                      onChange={(e) => setProfileData(p => ({ ...p, phone: e.target.value }))}
+                      placeholder="Phone Number"
+                      className="h-8 text-sm"
+                      disabled={saving}
+                    />
                   </div>
-                </div>
+                ) : (
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-12 w-12 ring-2 ring-fuchsia-500/30">
+                      <AvatarImage src={doctor.avatar_url || ''} alt={doctor.full_name} />
+                      <AvatarFallback className="bg-gradient-to-br from-fuchsia-600 to-fuchsia-700 text-white font-bold">
+                        {getInitials(doctor.full_name)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col flex-1">
+                      <p className="text-sm font-semibold text-gray-800 dark:text-gray-200">{doctor.full_name}</p>
+                      <p className="text-xs text-fuchsia-600/70 dark:text-fuchsia-400/70">{doctor.email}</p>
+                    </div>
+                    <button
+                      onClick={() => setEditingProfile(true)}
+                      className="p-1.5 rounded-lg hover:bg-fuchsia-50 text-fuchsia-500"
+                      title="Edit profile"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-fuchsia-100 dark:bg-fuchsia-900/30" />
               <DropdownMenuItem

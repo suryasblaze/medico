@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import { CopyButton } from '@/components/ui/copy-button'
 import { Share2, Users, Calendar, TrendingUp } from 'lucide-react'
 import Link from 'next/link'
+import { FormSlugEditor } from '@/components/intake/FormSlugEditor'
 
 export default async function IntakeFormsPage() {
   // Use cached doctor - already fetched in layout
@@ -17,8 +18,10 @@ export default async function IntakeFormsPage() {
   const protocol = headersList.get('x-forwarded-proto') || (host.includes('localhost') ? 'http' : 'https')
   const baseUrl = `${protocol}://${host}`
 
-  // Generate shareable link
-  const intakeUrl = `${baseUrl}/intake/${doctor?.id}`
+  // Generate shareable link - use short slug if available, otherwise fallback to ID
+  const intakeUrl = doctor?.form_slug
+    ? `${baseUrl}/form/${doctor.form_slug}`
+    : `${baseUrl}/intake/${doctor?.id}`
 
   // Get recent patients (last 10)
   const { data: recentPatients } = await supabase
@@ -69,11 +72,18 @@ export default async function IntakeFormsPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="flex-1 p-3 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg font-mono text-sm">
+              <div className="flex-1 p-3 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg font-mono text-sm break-all">
                 {intakeUrl}
               </div>
               <CopyButton text={intakeUrl} />
             </div>
+
+            {/* Slug Editor */}
+            <FormSlugEditor
+              doctorId={doctor?.id || ''}
+              currentSlug={doctor?.form_slug || ''}
+              baseUrl={baseUrl}
+            />
 
             <div className="grid grid-cols-3 gap-4 pt-4">
               <div className="text-center p-3 bg-white dark:bg-gray-950 rounded-xl border border-fuchsia-100 dark:border-fuchsia-900/30">

@@ -15,7 +15,7 @@ const getCachedDoctorProfile = unstable_cache(
     const supabase = createClient()
     const { data } = await supabase
       .from('doctors')
-      .select('id, user_id, full_name, email, phone, specialty, avatar_url, clinic_name, form_slug, updated_at')
+      .select('id, user_id, full_name, email, phone, specialty, avatar_url, clinic_name, updated_at')
       .eq('user_id', userId)
       .maybeSingle()
     return data

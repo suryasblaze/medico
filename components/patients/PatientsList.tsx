@@ -118,7 +118,7 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search patients by name, email, phone, or MRN..."
+            placeholder="Search patients by name, email, phone, or VRN..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9"
@@ -135,7 +135,7 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
               <TableHead>Name</TableHead>
               <TableHead>Contact</TableHead>
               <TableHead>Date of Birth</TableHead>
-              <TableHead>MRN</TableHead>
+              <TableHead>VRN</TableHead>
               <TableHead>Created</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>

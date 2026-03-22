@@ -4,7 +4,7 @@ import { redirect, notFound } from 'next/navigation'
 import { PatientDetailTabs } from '@/components/patients/PatientDetailTabs'
 import { DownloadPatientPDF } from '@/components/patients/DownloadPatientPDF'
 import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, User, Activity, FileText, FolderOpen } from 'lucide-react'
+import { ArrowLeft, FileText } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { DeletePatientButton } from '@/components/patients/DeletePatientButton'
@@ -94,55 +94,21 @@ export default async function PatientDetailPage({
                       <Badge variant="outline">{patient.gender}</Badge>
                     )}
                     {patient.medical_record_number && (
-                      <span className="font-mono">MRN: {patient.medical_record_number}</span>
+                      <span className="font-mono">VRN: {patient.medical_record_number}</span>
                     )}
                   </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-4 gap-6 mt-6">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-blue-100 dark:bg-blue-950/20 flex items-center justify-center">
-                    <Activity className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{medicalRecords?.length || 0}</p>
-                    <p className="text-xs text-muted-foreground">Medical Records</p>
-                  </div>
+              <div className="flex items-center gap-3 mt-4">
+                <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-950/20 flex items-center justify-center">
+                  <FileText className="h-5 w-5 text-orange-600" />
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-green-100 dark:bg-green-950/20 flex items-center justify-center">
-                    <FolderOpen className="h-5 w-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">{documents?.length || 0}</p>
-                    <p className="text-xs text-muted-foreground">Documents</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-950/20 flex items-center justify-center">
-                    <FileText className="h-5 w-5 text-orange-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {medicalRecords?.[0] ? new Date(medicalRecords[0].visit_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '-'}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Last Visit</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-fuchsia-100 dark:bg-fuchsia-950/20 flex items-center justify-center">
-                    <User className="h-5 w-5 text-fuchsia-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">
-                      {patient.created_at ? Math.floor((Date.now() - new Date(patient.created_at).getTime()) / (1000 * 60 * 60 * 24 * 30)) : 0}
-                    </p>
-                    <p className="text-xs text-muted-foreground">Months</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Last Visit</p>
+                  <p className="text-lg font-semibold">
+                    {medicalRecords?.[0] ? new Date(medicalRecords[0].visit_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'No visits yet'}
+                  </p>
                 </div>
               </div>
             </div>

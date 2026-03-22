@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
           .lte('visit_date', endDate.toISOString())
           .order('visit_date', { ascending: false })
 
-        csvContent = 'Date,Patient Name,MRN,Email,Phone,Notes\n'
+        csvContent = 'Date,Patient Name,VRN,Email,Phone,Notes\n'
         visits?.forEach((visit: any) => {
           const notes = (visit.notes || '')
             .replace(/<[^>]*>/g, '')
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
           .eq('doctor_id', doctorId)
           .order('created_at', { ascending: false })
 
-        csvContent = 'MRN,Name,Email,Phone,DOB,Gender,Created Date\n'
+        csvContent = 'VRN,Name,Email,Phone,DOB,Gender,Created Date\n'
         patients?.forEach((patient: any) => {
           csvContent += `${patient.medical_record_number || 'N/A'},${patient.full_name},${patient.email || 'N/A'},${patient.phone || 'N/A'},${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'N/A'},${patient.gender || 'N/A'},${new Date(patient.created_at).toLocaleDateString()}\n`
         })
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
           .lte('visit_date', endDate.toISOString())
           .order('visit_date', { ascending: false })
 
-        csvContent = 'Date,Patient,MRN,Notes\n'
+        csvContent = 'Date,Patient,VRN,Notes\n'
         records?.forEach((record: any) => {
           const notes = (record.notes || '')
             .replace(/<[^>]*>/g, '')

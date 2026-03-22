@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createClient } from '@/lib/supabase/client'
-import { Camera, CheckCircle, Loader2, Phone, Plus, X, Upload } from 'lucide-react'
+import { Camera, CheckCircle, Loader2, Phone, Plus, X } from 'lucide-react'
 
 interface IntakeFormClientProps {
   doctorId: string
@@ -28,7 +28,6 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
   const [showCamera, setShowCamera] = useState(false)
   const [isUnder18, setIsUnder18] = useState(false)
   const [pendingStream, setPendingStream] = useState<MediaStream | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
@@ -100,10 +99,37 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
   }
 
   const updatePhoneNumber = (index: number, value: string) => {
+    // Only allow digits and limit to 10 characters
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 10)
     const newPhones = [...phoneNumbers]
-    newPhones[index] = value
+    newPhones[index] = digitsOnly
     setPhoneNumbers(newPhones)
     setFormData({ ...formData, phone: newPhones[0] || '' })
+  }
+
+  // Check if a phone number is duplicate
+  const isDuplicatePhone = (phone: string, index: number): boolean => {
+    if (!phone.trim()) return false
+    return phoneNumbers.some((p, i) => i !== index && p.trim() === phone.trim())
+  }
+
+  // Check if phone number is valid (exactly 10 digits)
+  const isInvalidPhone = (phone: string): boolean => {
+    if (!phone) return false
+    return phone.length > 0 && phone.length !== 10
+  }
+
+  // Check if there are any duplicate phone numbers
+  const hasDuplicatePhones = (): boolean => {
+    const phones = phoneNumbers.filter(p => p.trim())
+    const uniquePhones = new Set(phones.map(p => p.trim()))
+    return phones.length !== uniquePhones.size
+  }
+
+  // Check if all phone numbers are valid (10 digits)
+  const hasInvalidPhones = (): boolean => {
+    const phones = phoneNumbers.filter(p => p.trim())
+    return phones.some(p => p.length !== 10)
   }
 
   const handleAvatarUpload = async (file: File) => {
@@ -138,11 +164,6 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
     } finally {
       setUploadingAvatar(false)
     }
-  }
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file) handleAvatarUpload(file)
   }
 
   const startCamera = async () => {
@@ -209,6 +230,19 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check for duplicate phone numbers
+    if (hasDuplicatePhones()) {
+      alert('Please remove duplicate phone numbers before submitting')
+      return
+    }
+
+    // Check for invalid phone numbers (must be exactly 10 digits)
+    if (hasInvalidPhones()) {
+      alert('All phone numbers must be exactly 10 digits')
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -275,7 +309,7 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
           <div className="relative">
             <div
               className="h-24 w-24 rounded-full bg-fuchsia-600 flex items-center justify-center text-white text-2xl font-bold overflow-hidden cursor-pointer hover:opacity-90 transition-opacity"
-              onClick={() => !showCamera && fileInputRef.current?.click()}
+              onClick={() => !showCamera && !avatarUrl && startCamera()}
             >
               {uploadingAvatar ? (
                 <Loader2 className="h-8 w-8 animate-spin" />
@@ -294,42 +328,22 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
                 <X className="h-4 w-4" />
               </button>
             )}
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-              className="hidden"
-            />
           </div>
           <div className="space-y-2">
             <p className="text-sm text-fuchsia-600/70 dark:text-fuchsia-400/70">
-              Upload or take a photo
+              Take a photo with camera
             </p>
-            <div className="flex gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploadingAvatar || loading}
-                className="border-fuchsia-200 dark:border-fuchsia-800"
-              >
-                <Upload className="h-4 w-4 mr-1" />
-                Upload
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={startCamera}
-                disabled={uploadingAvatar || loading || showCamera}
-                className="border-fuchsia-200 dark:border-fuchsia-800"
-              >
-                <Camera className="h-4 w-4 mr-1" />
-                Camera
-              </Button>
-            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={startCamera}
+              disabled={uploadingAvatar || loading || showCamera}
+              className="border-fuchsia-200 dark:border-fuchsia-800"
+            >
+              <Camera className="h-4 w-4 mr-1" />
+              Open Camera
+            </Button>
           </div>
         </div>
 
@@ -472,19 +486,22 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
             </div>
             <div className="space-y-2">
               {phoneNumbers.map((phone, index) => (
-                <div key={index} className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-fuchsia-400" />
-                    <Input
-                      type="tel"
-                      placeholder={index === 0 ? 'Primary phone number' : 'Additional phone'}
-                      value={phone}
-                      onChange={(e) => updatePhoneNumber(index, e.target.value)}
-                      disabled={loading}
-                      required={index === 0}
-                      className="pl-9"
-                    />
-                  </div>
+                <div key={index} className="space-y-1">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Phone className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isDuplicatePhone(phone, index) || isInvalidPhone(phone) ? 'text-red-500' : 'text-fuchsia-400'}`} />
+                      <Input
+                        type="tel"
+                        placeholder={index === 0 ? '10-digit phone number' : 'Additional phone (10 digits)'}
+                        value={phone}
+                        onChange={(e) => updatePhoneNumber(index, e.target.value)}
+                        disabled={loading}
+                        required={index === 0}
+                        maxLength={10}
+                        className={`pl-9 pr-12 ${isDuplicatePhone(phone, index) || isInvalidPhone(phone) ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-fuchsia-400">{phone.length}/10</span>
+                    </div>
                   {phoneNumbers.length > 1 && (
                     <Button
                       type="button"
@@ -496,6 +513,13 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
                     >
                       <X className="h-4 w-4" />
                     </Button>
+                  )}
+                  </div>
+                  {isDuplicatePhone(phone, index) && (
+                    <p className="text-xs text-red-500 pl-9">This phone number is already added</p>
+                  )}
+                  {!isDuplicatePhone(phone, index) && isInvalidPhone(phone) && (
+                    <p className="text-xs text-red-500 pl-9">Phone number must be exactly 10 digits</p>
                   )}
                 </div>
               ))}

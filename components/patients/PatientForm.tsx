@@ -70,9 +70,37 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
   }
 
   const updatePhoneNumber = (index: number, value: string) => {
+    // Only allow digits and limit to 10 characters
+    const digitsOnly = value.replace(/\D/g, '').slice(0, 10)
     const newPhones = [...(formData.phone_numbers || [])]
-    newPhones[index] = value
+    newPhones[index] = digitsOnly
     setFormData({ ...formData, phone_numbers: newPhones, phone: newPhones[0] || '' })
+  }
+
+  // Check if a phone number is duplicate
+  const isDuplicatePhone = (phone: string, index: number): boolean => {
+    if (!phone.trim()) return false
+    const phones = formData.phone_numbers || []
+    return phones.some((p, i) => i !== index && p.trim() === phone.trim())
+  }
+
+  // Check if phone number is valid (exactly 10 digits)
+  const isInvalidPhone = (phone: string): boolean => {
+    if (!phone) return false
+    return phone.length > 0 && phone.length !== 10
+  }
+
+  // Check if there are any duplicate phone numbers
+  const hasDuplicatePhones = (): boolean => {
+    const phones = (formData.phone_numbers || []).filter(p => p.trim())
+    const uniquePhones = new Set(phones.map(p => p.trim()))
+    return phones.length !== uniquePhones.size
+  }
+
+  // Check if all phone numbers are valid (10 digits)
+  const hasInvalidPhones = (): boolean => {
+    const phones = (formData.phone_numbers || []).filter(p => p.trim())
+    return phones.some(p => p.length !== 10)
   }
 
   const calculateAge = (dob: string): number => {
@@ -206,15 +234,15 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
     }
   }
 
-  // Auto-generate MRN for new patients
+  // Auto-generate VRN for new patients
   useEffect(() => {
     if (patient) return // Skip for existing patients
 
-    const generateMrn = async () => {
+    const generateVrn = async () => {
       try {
         const supabase = createClient()
 
-        // Get the highest MRN number for this doctor
+        // Get the highest VRN number for this doctor
         const { data, error } = await supabase
           .from('patients')
           .select('medical_record_number')
@@ -224,14 +252,14 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
 
         if (error) throw error
 
-        // Find the highest number from existing MRNs
+        // Find the highest number from existing VRNs
         let maxNumber = 0
         if (data) {
           for (const p of data) {
-            const mrn = p.medical_record_number
-            if (mrn) {
-              // Extract number from MRN (handles both "MRN-0001" and "1" formats)
-              const match = mrn.match(/(\d+)/)
+            const vrn = p.medical_record_number
+            if (vrn) {
+              // Extract number from VRN (handles both "VRN-0001" and "1" formats)
+              const match = vrn.match(/(\d+)/)
               if (match) {
                 const num = parseInt(match[1], 10)
                 if (num > maxNumber) maxNumber = num
@@ -240,21 +268,21 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
           }
         }
 
-        // Generate next MRN with padding (e.g., MRN-0001)
+        // Generate next VRN with padding (e.g., VRN-0001)
         const nextNumber = maxNumber + 1
-        const newMrn = `MRN-${nextNumber.toString().padStart(4, '0')}`
+        const newVrn = `VRN-${nextNumber.toString().padStart(4, '0')}`
 
-        setFormData(prev => ({ ...prev, medical_record_number: newMrn }))
+        setFormData(prev => ({ ...prev, medical_record_number: newVrn }))
       } catch (err) {
-        console.error('Failed to generate MRN:', err)
+        console.error('Failed to generate VRN:', err)
         // Fallback to simple number
-        setFormData(prev => ({ ...prev, medical_record_number: 'MRN-0001' }))
+        setFormData(prev => ({ ...prev, medical_record_number: 'VRN-0001' }))
       } finally {
         setLoadingMrn(false)
       }
     }
 
-    generateMrn()
+    generateVrn()
   }, [doctorId, patient])
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -290,6 +318,19 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    // Check for duplicate phone numbers
+    if (hasDuplicatePhones()) {
+      setError('Please remove duplicate phone numbers before submitting')
+      return
+    }
+
+    // Check for invalid phone numbers (not 10 digits)
+    if (hasInvalidPhones()) {
+      setError('All phone numbers must be exactly 10 digits')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -453,7 +494,7 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="medical_record_number">
-              Medical Record Number
+              VR Number (VRN)
             </Label>
             <Input
               id="medical_record_number"
@@ -549,18 +590,21 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
             </div>
             <div className="space-y-2">
               {(formData.phone_numbers || ['']).map((phone, index) => (
-                <div key={index} className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="tel"
-                      placeholder={index === 0 ? 'Primary phone number' : 'Additional phone'}
-                      value={phone}
-                      onChange={(e) => updatePhoneNumber(index, e.target.value)}
-                      disabled={loading}
-                      className="pl-9"
-                    />
-                  </div>
+                <div key={index} className="space-y-1">
+                  <div className="flex gap-2">
+                    <div className="relative flex-1">
+                      <Phone className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isDuplicatePhone(phone, index) || isInvalidPhone(phone) ? 'text-red-500' : 'text-muted-foreground'}`} />
+                      <Input
+                        type="tel"
+                        placeholder={index === 0 ? '10-digit phone number' : 'Additional phone (10 digits)'}
+                        value={phone}
+                        onChange={(e) => updatePhoneNumber(index, e.target.value)}
+                        disabled={loading}
+                        maxLength={10}
+                        className={`pl-9 ${isDuplicatePhone(phone, index) || isInvalidPhone(phone) ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{phone.length}/10</span>
+                    </div>
                   {(formData.phone_numbers?.length || 0) > 1 && (
                     <Button
                       type="button"
@@ -572,6 +616,13 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
                     >
                       <X className="h-4 w-4" />
                     </Button>
+                  )}
+                  </div>
+                  {isDuplicatePhone(phone, index) && (
+                    <p className="text-xs text-red-500 pl-9">This phone number is already added</p>
+                  )}
+                  {!isDuplicatePhone(phone, index) && isInvalidPhone(phone) && (
+                    <p className="text-xs text-red-500 pl-9">Phone number must be exactly 10 digits</p>
                   )}
                 </div>
               ))}

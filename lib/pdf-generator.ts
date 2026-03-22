@@ -151,7 +151,7 @@ export function generatePatientListPDF(
       <table>
         <thead>
           <tr>
-            <th>MRN</th>
+            <th>VRN</th>
             <th>Name</th>
             <th>Email</th>
             <th>Phone</th>
@@ -338,7 +338,7 @@ export function generatePatientRecordPDF(
 
       <div class="patient-header">
         <h2>${patient.full_name}</h2>
-        <div class="mrn">MRN: ${patient.medical_record_number || 'Not Assigned'}</div>
+        <div class="mrn">VRN: ${patient.medical_record_number || 'Not Assigned'}</div>
       </div>
 
       <!-- Basic Information -->

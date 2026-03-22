@@ -100,7 +100,7 @@ export function PatientViewDetails({ patient, medicalRecords }: PatientViewDetai
             </Popover>
             <div className="flex-1">
               <h2 className="text-xl font-semibold">{patient.full_name}</h2>
-              <p className="text-sm text-muted-foreground">MRN: {patient.medical_record_number || '-'}</p>
+              <p className="text-sm text-muted-foreground">VRN: {patient.medical_record_number || '-'}</p>
               {isUnder18 && (
                 <Badge variant="outline" className="mt-1 text-orange-600 border-orange-600">
                   Under 18
@@ -114,7 +114,7 @@ export function PatientViewDetails({ patient, medicalRecords }: PatientViewDetai
               <p className="text-base font-semibold">{patient.full_name}</p>
             </div>
             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Medical Record Number</p>
+              <p className="text-sm font-medium text-muted-foreground">VR Number (VRN)</p>
               <p className="text-base font-mono">{patient.medical_record_number || '-'}</p>
             </div>
             <div className="space-y-1">

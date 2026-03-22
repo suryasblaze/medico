@@ -25,7 +25,7 @@ A comprehensive, modern healthcare management platform for dental and medical pr
 ### 📝 Smart Forms & Templates
 - **5 Dental Templates** - Pre-built professional forms ready to use
 - **Shareable Links** - Send template forms to patients via SMS/email
-- **MRN Lookup** - Existing patients auto-fill info with Medical Record Number
+- **VRN Lookup** - Existing patients auto-fill info with VR Number
 - **Auto-Patient Creation** - New patients created automatically
 
 ### 📊 Reports & Analytics

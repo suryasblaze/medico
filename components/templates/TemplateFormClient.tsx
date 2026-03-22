@@ -51,11 +51,11 @@ export function TemplateFormClient({ doctorId, template }: TemplateFormClientPro
         setShowMrnLookup(false)
         alert('Patient found! Your information has been auto-filled.')
       } else {
-        alert('No patient found with that MRN. Please enter your information manually.')
+        alert('No patient found with that VRN. Please enter your information manually.')
       }
     } catch (error) {
-      console.error('Error looking up MRN:', error)
-      alert('Error looking up MRN. Please enter your information manually.')
+      console.error('Error looking up VRN:', error)
+      alert('Error looking up VRN. Please enter your information manually.')
     } finally {
       setMrnLoading(false)
     }
@@ -82,7 +82,7 @@ export function TemplateFormClient({ doctorId, template }: TemplateFormClientPro
     try {
       const supabase = createClient()
 
-      // Find existing patient by email or MRN
+      // Find existing patient by email or VRN
       let query = supabase
         .from('patients')
         .select('id')
@@ -155,16 +155,16 @@ export function TemplateFormClient({ doctorId, template }: TemplateFormClientPro
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* MRN Lookup (for existing patients) */}
+      {/* VRN Lookup (for existing patients) */}
       {showMrnLookup && (
         <div className="space-y-4 p-4 bg-blue-50 dark:bg-blue-950/10 rounded-lg border border-blue-200 dark:border-blue-900">
           <h3 className="text-lg font-semibold">Existing Patient?</h3>
           <p className="text-sm text-muted-foreground">
-            If you're already a patient, enter your Medical Record Number (MRN) to auto-fill your information.
+            If you're already a patient, enter your VR Number (VRN) to auto-fill your information.
           </p>
           <div className="flex items-center gap-2">
             <Input
-              placeholder="Enter your MRN (e.g., MRN-123456)"
+              placeholder="Enter your VRN (e.g., VRN-0001)"
               value={mrn}
               onChange={(e) => setMrn(e.target.value)}
               className="flex-1"

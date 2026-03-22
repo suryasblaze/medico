@@ -66,6 +66,7 @@ export async function updateSession(request: NextRequest) {
     pathname === '/' ||
     pathname === '/login' ||
     pathname === '/signup' ||
+    pathname.startsWith('/form') || // Public patient form (short URL)
     pathname.startsWith('/forms/') || // Public form submissions
     pathname.startsWith('/intake/') || // Public patient intake forms
     pathname.startsWith('/template-form/') // Public template forms

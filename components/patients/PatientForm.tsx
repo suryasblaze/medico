@@ -103,6 +103,13 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
     return phones.some(p => p.length !== 10)
   }
 
+  // Check if guardian phone is duplicate of any patient phone
+  const isGuardianPhoneDuplicate = (): boolean => {
+    const guardianPhone = (formData.parent_guardian_phone || '').trim()
+    if (!guardianPhone) return false
+    return (formData.phone_numbers || []).some(p => p.trim() === guardianPhone)
+  }
+
   const calculateAge = (dob: string): number => {
     if (!dob) return 0
     const birthDate = new Date(dob)
@@ -329,6 +336,18 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
     if (hasInvalidPhones()) {
       setError('All phone numbers must be exactly 10 digits')
       return
+    }
+
+    // Check guardian phone validation for under 18
+    if (isUnder18) {
+      if (isGuardianPhoneDuplicate()) {
+        setError('Guardian phone number cannot be the same as patient phone number')
+        return
+      }
+      if (isInvalidPhone(formData.parent_guardian_phone || '')) {
+        setError('Guardian phone number must be exactly 10 digits')
+        return
+      }
     }
 
     setLoading(true)
@@ -705,20 +724,30 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
               <Label htmlFor="parent_guardian_phone">
                 Parent/Guardian Phone <span className="text-destructive">*</span>
               </Label>
-              <Input
-                id="parent_guardian_phone"
-                type="tel"
-                value={formData.parent_guardian_phone}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    parent_guardian_phone: e.target.value,
-                  })
-                }
-                placeholder="+1 (555) 987-6543"
-                disabled={loading}
-                required
-              />
+              <div className="relative">
+                <Phone className={`absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 ${isGuardianPhoneDuplicate() || isInvalidPhone(formData.parent_guardian_phone || '') ? 'text-red-500' : 'text-muted-foreground'}`} />
+                <Input
+                  id="parent_guardian_phone"
+                  type="tel"
+                  value={formData.parent_guardian_phone}
+                  onChange={(e) => {
+                    const digitsOnly = e.target.value.replace(/\D/g, '').slice(0, 10)
+                    setFormData({ ...formData, parent_guardian_phone: digitsOnly })
+                  }}
+                  placeholder="10-digit phone number"
+                  disabled={loading}
+                  required
+                  maxLength={10}
+                  className={`pl-9 pr-12 ${isGuardianPhoneDuplicate() || isInvalidPhone(formData.parent_guardian_phone || '') ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">{(formData.parent_guardian_phone || '').length}/10</span>
+              </div>
+              {isGuardianPhoneDuplicate() && (
+                <p className="text-xs text-red-500">This number is already used as a patient phone number</p>
+              )}
+              {!isGuardianPhoneDuplicate() && isInvalidPhone(formData.parent_guardian_phone || '') && (
+                <p className="text-xs text-red-500">Phone number must be exactly 10 digits</p>
+              )}
             </div>
           </div>
         </div>

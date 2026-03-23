@@ -39,6 +39,13 @@ export function PrescriptionForm({ doctorId }: PrescriptionFormProps) {
     setHeaderData(prev => ({ ...prev, [field]: value }))
   }
 
+  // Column visibility toggles
+  const [columns, setColumns] = useState({ m: true, a: true, n: true })
+
+  const toggleColumn = (col: 'm' | 'a' | 'n') => {
+    setColumns(prev => ({ ...prev, [col]: !prev[col] }))
+  }
+
   // Multiple prescription sections
   const [sections, setSections] = useState([
     { id: 1, medicine: '', m: '', a: '', n: '' }
@@ -73,6 +80,7 @@ export function PrescriptionForm({ doctorId }: PrescriptionFormProps) {
       const printWindow = window.open('', '_blank')
 
       if (printWindow) {
+        const visibleColCount = 2 + (columns.m ? 1 : 0) + (columns.a ? 1 : 0) + (columns.n ? 1 : 0)
         const medicineRows = sections
           .filter(s => s.medicine.trim())
           .map((s, i) => `
@@ -81,9 +89,9 @@ export function PrescriptionForm({ doctorId }: PrescriptionFormProps) {
                 ${i === 0 ? '<span style="font-family: serif; font-style: italic; font-size: 18px; font-weight: bold; color: #a855f7;">Rx</span>' : `<span style="color: #888;">${i + 1}.</span>`}
               </td>
               <td style="padding: 8px 12px; border: 1px solid #e5e5e5;">${s.medicine}</td>
-              <td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #fdf4ff;">${s.m || ''}</td>
-              <td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #fff7ed;">${s.a || ''}</td>
-              <td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #faf5ff;">${s.n || ''}</td>
+              ${columns.m ? `<td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #fdf4ff;">${s.m || ''}</td>` : ''}
+              ${columns.a ? `<td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #fff7ed;">${s.a || ''}</td>` : ''}
+              ${columns.n ? `<td style="width: 50px; text-align: center; padding: 8px 4px; border: 1px solid #e5e5e5; background: #faf5ff;">${s.n || ''}</td>` : ''}
             </tr>
           `).join('')
 
@@ -274,22 +282,22 @@ export function PrescriptionForm({ doctorId }: PrescriptionFormProps) {
                   <tr>
                     <th style="width: 40px;"></th>
                     <th style="text-align: left; padding-left: 12px;">Medicine / Instructions</th>
-                    <th class="th-m" style="width: 50px;">
+                    ${columns.m ? `<th class="th-m" style="width: 50px;">
                       <span class="timing-header">M</span>
                       <span class="timing-sub">காலை</span>
-                    </th>
-                    <th class="th-a" style="width: 50px;">
+                    </th>` : ''}
+                    ${columns.a ? `<th class="th-a" style="width: 50px;">
                       <span class="timing-header">A</span>
                       <span class="timing-sub">மதியம்</span>
-                    </th>
-                    <th class="th-n" style="width: 50px;">
+                    </th>` : ''}
+                    ${columns.n ? `<th class="th-n" style="width: 50px;">
                       <span class="timing-header">N</span>
                       <span class="timing-sub">இரவு</span>
-                    </th>
+                    </th>` : ''}
                   </tr>
                 </thead>
                 <tbody>
-                  ${medicineRows || '<tr><td colspan="5" style="padding: 20px; text-align: center; color: #999; border: 1px solid #e5e5e5;">No medicines added</td></tr>'}
+                  ${medicineRows || `<tr><td colspan="${visibleColCount}" style="padding: 20px; text-align: center; color: #999; border: 1px solid #e5e5e5;">No medicines added</td></tr>`}
                 </tbody>
               </table>
 
@@ -550,17 +558,35 @@ export function PrescriptionForm({ doctorId }: PrescriptionFormProps) {
               <div className="flex-1 min-w-0 px-4 py-2">
                 <span className="text-xs font-semibold text-gray-500">Medicine / Instructions</span>
               </div>
-              <div className="w-14 flex-shrink-0 border-l border-gray-200 text-center py-2 bg-fuchsia-50">
-                <span className="text-xs font-bold text-fuchsia-700">M</span>
-                <span className="block text-[8px] text-fuchsia-500">காலை</span>
+              <div
+                className={`w-14 flex-shrink-0 border-l border-gray-200 text-center py-1.5 cursor-pointer transition-colors ${columns.m ? 'bg-fuchsia-50' : 'bg-gray-100 opacity-50'}`}
+                onClick={() => toggleColumn('m')}
+              >
+                <div className="flex items-center justify-center gap-0.5">
+                  <input type="checkbox" checked={columns.m} onChange={() => toggleColumn('m')} className="w-3 h-3 accent-fuchsia-600 cursor-pointer" onClick={(e) => e.stopPropagation()} />
+                  <span className={`text-xs font-bold ${columns.m ? 'text-fuchsia-700' : 'text-gray-400 line-through'}`}>M</span>
+                </div>
+                <span className={`block text-[8px] ${columns.m ? 'text-fuchsia-500' : 'text-gray-400'}`}>காலை</span>
               </div>
-              <div className="w-14 flex-shrink-0 border-l border-gray-200 text-center py-2 bg-orange-50">
-                <span className="text-xs font-bold text-orange-700">A</span>
-                <span className="block text-[8px] text-orange-500">மதியம்</span>
+              <div
+                className={`w-14 flex-shrink-0 border-l border-gray-200 text-center py-1.5 cursor-pointer transition-colors ${columns.a ? 'bg-orange-50' : 'bg-gray-100 opacity-50'}`}
+                onClick={() => toggleColumn('a')}
+              >
+                <div className="flex items-center justify-center gap-0.5">
+                  <input type="checkbox" checked={columns.a} onChange={() => toggleColumn('a')} className="w-3 h-3 accent-orange-600 cursor-pointer" onClick={(e) => e.stopPropagation()} />
+                  <span className={`text-xs font-bold ${columns.a ? 'text-orange-700' : 'text-gray-400 line-through'}`}>A</span>
+                </div>
+                <span className={`block text-[8px] ${columns.a ? 'text-orange-500' : 'text-gray-400'}`}>மதியம்</span>
               </div>
-              <div className="w-14 flex-shrink-0 border-l border-gray-200 text-center py-2 bg-purple-50">
-                <span className="text-xs font-bold text-purple-700">N</span>
-                <span className="block text-[8px] text-purple-500">இரவு</span>
+              <div
+                className={`w-14 flex-shrink-0 border-l border-gray-200 text-center py-1.5 cursor-pointer transition-colors ${columns.n ? 'bg-purple-50' : 'bg-gray-100 opacity-50'}`}
+                onClick={() => toggleColumn('n')}
+              >
+                <div className="flex items-center justify-center gap-0.5">
+                  <input type="checkbox" checked={columns.n} onChange={() => toggleColumn('n')} className="w-3 h-3 accent-purple-600 cursor-pointer" onClick={(e) => e.stopPropagation()} />
+                  <span className={`text-xs font-bold ${columns.n ? 'text-purple-700' : 'text-gray-400 line-through'}`}>N</span>
+                </div>
+                <span className={`block text-[8px] ${columns.n ? 'text-purple-500' : 'text-gray-400'}`}>இரவு</span>
               </div>
               <div className="w-10 flex-shrink-0 border-l border-gray-200" />
             </div>
@@ -590,37 +616,43 @@ export function PrescriptionForm({ doctorId }: PrescriptionFormProps) {
                 </div>
 
                 {/* M Column */}
-                <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-fuchsia-50/20">
-                  <input
-                    type="text"
-                    value={section.m}
-                    onChange={(e) => updateSection(section.id, 'm', e.target.value)}
-                    placeholder="1"
-                    className="w-full h-full p-2 text-sm text-center border-0 outline-none bg-transparent"
-                  />
-                </div>
+                {columns.m && (
+                  <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-fuchsia-50/20">
+                    <input
+                      type="text"
+                      value={section.m}
+                      onChange={(e) => updateSection(section.id, 'm', e.target.value)}
+                      placeholder="1"
+                      className="w-full h-full p-2 text-sm text-center border-0 outline-none bg-transparent"
+                    />
+                  </div>
+                )}
 
                 {/* A Column */}
-                <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-orange-50/20">
-                  <input
-                    type="text"
-                    value={section.a}
-                    onChange={(e) => updateSection(section.id, 'a', e.target.value)}
-                    placeholder="0"
-                    className="w-full h-full p-2 text-sm text-center border-0 outline-none bg-transparent"
-                  />
-                </div>
+                {columns.a && (
+                  <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-orange-50/20">
+                    <input
+                      type="text"
+                      value={section.a}
+                      onChange={(e) => updateSection(section.id, 'a', e.target.value)}
+                      placeholder="0"
+                      className="w-full h-full p-2 text-sm text-center border-0 outline-none bg-transparent"
+                    />
+                  </div>
+                )}
 
                 {/* N Column */}
-                <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-purple-50/20">
-                  <input
-                    type="text"
-                    value={section.n}
-                    onChange={(e) => updateSection(section.id, 'n', e.target.value)}
-                    placeholder="1"
-                    className="w-full h-full p-2 text-sm text-center border-0 outline-none bg-transparent"
-                  />
-                </div>
+                {columns.n && (
+                  <div className="w-14 flex-shrink-0 border-r border-gray-200 bg-purple-50/20">
+                    <input
+                      type="text"
+                      value={section.n}
+                      onChange={(e) => updateSection(section.id, 'n', e.target.value)}
+                      placeholder="1"
+                      className="w-full h-full p-2 text-sm text-center border-0 outline-none bg-transparent"
+                    />
+                  </div>
+                )}
 
                 {/* Remove Button */}
                 <div className="w-10 flex-shrink-0 flex items-center justify-center">

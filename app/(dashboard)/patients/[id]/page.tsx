@@ -3,7 +3,7 @@ import { getCurrentDoctor } from '@/lib/supabase/queries'
 import { redirect, notFound } from 'next/navigation'
 import { PatientDetailTabs } from '@/components/patients/PatientDetailTabs'
 import { DownloadPatientPDF } from '@/components/patients/DownloadPatientPDF'
-import { ArrowLeft, Calendar } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { DeletePatientButton } from '@/components/patients/DeletePatientButton'
@@ -57,15 +57,7 @@ export default async function PatientDetailPage({
             Back to Patients
           </Button>
         </Link>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Calendar className="h-4 w-4 text-orange-500" />
-            <span>Last Visit:</span>
-            <span className="font-semibold text-foreground">
-              {medicalRecords?.[0] ? new Date(medicalRecords[0].visit_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'No visits yet'}
-            </span>
-          </div>
-          <div className="h-5 w-px bg-border" />
+        <div className="flex items-center gap-2">
           <DownloadPatientPDF patientId={patient.id} patientName={patient.full_name} />
           <DeletePatientButton patientId={patient.id} patientName={patient.full_name} />
         </div>

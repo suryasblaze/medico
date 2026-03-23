@@ -115,7 +115,17 @@ export function PatientViewDetails({ patient, medicalRecords }: PatientViewDetai
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">VR Number (VRN)</p>
-              <p className="text-base font-mono">{patient.medical_record_number || '-'}</p>
+              <div className="flex items-center gap-3">
+                <p className="text-base font-mono">{patient.medical_record_number || '-'}</p>
+                <span className="text-xs text-muted-foreground">|</span>
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Calendar className="h-3.5 w-3.5 text-orange-500" />
+                  <span className="text-muted-foreground">Last Visit:</span>
+                  <span className="font-semibold">
+                    {medicalRecords?.[0] ? formatDate(medicalRecords[0].visit_date) : 'No visits yet'}
+                  </span>
+                </div>
+              </div>
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Date of Birth</p>

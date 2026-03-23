@@ -547,10 +547,6 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
               <SelectContent>
                 <SelectItem value="male">Male</SelectItem>
                 <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-                <SelectItem value="prefer_not_to_say">
-                  Prefer not to say
-                </SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -3,12 +3,10 @@ import { getCurrentDoctor } from '@/lib/supabase/queries'
 import { redirect, notFound } from 'next/navigation'
 import { PatientDetailTabs } from '@/components/patients/PatientDetailTabs'
 import { DownloadPatientPDF } from '@/components/patients/DownloadPatientPDF'
-import { Card, CardContent } from '@/components/ui/card'
-import { ArrowLeft, FileText } from 'lucide-react'
+import { ArrowLeft, Calendar } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { DeletePatientButton } from '@/components/patients/DeletePatientButton'
-import { Badge } from '@/components/ui/badge'
 
 export default async function PatientDetailPage({
   params,
@@ -59,62 +57,19 @@ export default async function PatientDetailPage({
             Back to Patients
           </Button>
         </Link>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4 text-orange-500" />
+            <span>Last Visit:</span>
+            <span className="font-semibold text-foreground">
+              {medicalRecords?.[0] ? new Date(medicalRecords[0].visit_date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'No visits yet'}
+            </span>
+          </div>
+          <div className="h-5 w-px bg-border" />
           <DownloadPatientPDF patientId={patient.id} patientName={patient.full_name} />
           <DeletePatientButton patientId={patient.id} patientName={patient.full_name} />
         </div>
       </div>
-
-      {/* Patient Header Card */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-900">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-6">
-            <div className="h-20 w-20 rounded-full bg-blue-600 flex items-center justify-center text-white text-2xl font-bold flex-shrink-0 overflow-hidden">
-              {patient.avatar_url ? (
-                <img
-                  src={patient.avatar_url}
-                  alt={patient.full_name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                patient.full_name.split(' ').map((n: string) => n[0]).join('').toUpperCase()
-              )}
-            </div>
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                    {patient.full_name}
-                  </h1>
-                  <div className="flex items-center gap-3 mt-2 text-sm text-muted-foreground">
-                    {patient.date_of_birth && (
-                      <span>{new Date(patient.date_of_birth).toLocaleDateString()}</span>
-                    )}
-                    {patient.gender && (
-                      <Badge variant="outline">{patient.gender}</Badge>
-                    )}
-                    {patient.medical_record_number && (
-                      <span className="font-mono">VRN: {patient.medical_record_number}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 mt-4">
-                <div className="h-10 w-10 rounded-lg bg-orange-100 dark:bg-orange-950/20 flex items-center justify-center">
-                  <FileText className="h-5 w-5 text-orange-600" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Last Visit</p>
-                  <p className="text-lg font-semibold">
-                    {medicalRecords?.[0] ? new Date(medicalRecords[0].visit_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'No visits yet'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Tabs Section */}
       <PatientDetailTabs

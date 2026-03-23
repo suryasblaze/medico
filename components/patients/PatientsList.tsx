@@ -170,12 +170,12 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
                           />
                         </div>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-2" side="right">
+                      <PopoverContent className="w-auto p-3" side="right">
                         <div className="flex flex-col items-center gap-2">
                           <AvatarImage
                             src={patient.avatar_url}
                             alt={patient.full_name}
-                            size={128}
+                            size={256}
                             fallback={initials}
                             className="rounded-lg"
                           />

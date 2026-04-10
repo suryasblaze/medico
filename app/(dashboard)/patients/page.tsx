@@ -9,13 +9,24 @@ export default async function PatientsPage() {
   // Use cached doctor - already fetched in layout
   const doctor = await getCurrentDoctor()
 
-  // Fetch patients
+  // Fetch patients with their appointments to compute last visit date
   const supabase = createClient()
-  const { data: patients } = await supabase
+  const { data: patientsData } = await supabase
     .from('patients')
-    .select('*')
+    .select('*, appointments(appointment_date, status)')
     .eq('doctor_id', doctor?.id)
     .order('created_at', { ascending: false })
+
+  const patients = (patientsData || []).map((p: any) => {
+    const appts = (p.appointments || []) as { appointment_date: string; status: string }[]
+    const lastVisit = appts
+      .filter((a) => a.status === 'completed')
+      .map((a) => a.appointment_date)
+      .sort()
+      .pop() || null
+    const { appointments, ...rest } = p
+    return { ...rest, last_visit_date: lastVisit }
+  })
 
   return (
     <div className="space-y-6">

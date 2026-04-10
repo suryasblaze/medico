@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
             .replace(/"/g, '""')
             .trim()
             .slice(0, 200)
-          csvContent += `${new Date(visit.visit_date).toLocaleDateString()},"${visit.patients?.full_name || 'N/A'}",${visit.patients?.medical_record_number || 'N/A'},${visit.patients?.email || 'N/A'},${visit.patients?.phone || 'N/A'},"${notes}"\n`
+          csvContent += `${new Date(visit.visit_date).toLocaleDateString('en-GB')},"${visit.patients?.full_name || 'N/A'}",${visit.patients?.medical_record_number || 'N/A'},${visit.patients?.email || 'N/A'},${visit.patients?.phone || 'N/A'},"${notes}"\n`
         })
         filename = `patient-visits-${month}.csv`
         break
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
 
         csvContent = 'VRN,Name,Email,Phone,DOB,Gender,Created Date\n'
         patients?.forEach((patient: any) => {
-          csvContent += `${patient.medical_record_number || 'N/A'},${patient.full_name},${patient.email || 'N/A'},${patient.phone || 'N/A'},${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'N/A'},${patient.gender || 'N/A'},${new Date(patient.created_at).toLocaleDateString()}\n`
+          csvContent += `${patient.medical_record_number || 'N/A'},${patient.full_name},${patient.email || 'N/A'},${patient.phone || 'N/A'},${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('en-GB') : 'N/A'},${patient.gender || 'N/A'},${new Date(patient.created_at).toLocaleDateString('en-GB')}\n`
         })
         filename = `patient-list-${month}.csv`
         break
@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
             .replace(/"/g, '""')
             .trim()
             .slice(0, 300)
-          csvContent += `${new Date(record.visit_date).toLocaleDateString()},"${record.patients?.full_name || 'N/A'}",${record.patients?.medical_record_number || 'N/A'},"${notes}"\n`
+          csvContent += `${new Date(record.visit_date).toLocaleDateString('en-GB')},"${record.patients?.full_name || 'N/A'}",${record.patients?.medical_record_number || 'N/A'},"${notes}"\n`
         })
         filename = `medical-records-${month}.csv`
         break

@@ -510,11 +510,7 @@ export function ExpensesList({ expenses, doctorId }: ExpensesListProps) {
                 ) : (
                   <TableRow key={expense.id}>
                     <TableCell className="text-muted-foreground">
-                      {new Date(expense.expense_date).toLocaleDateString('en-IN', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
+                      {new Date(expense.expense_date).toLocaleDateString('en-GB')}
                     </TableCell>
                     <TableCell>
                       <p className="font-medium">{expense.title}</p>

@@ -166,7 +166,7 @@ export function generatePatientListPDF(
               <td><strong>${p.full_name}</strong></td>
               <td>${p.email || 'N/A'}</td>
               <td>${p.phone || 'N/A'}</td>
-              <td>${p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString() : 'N/A'}</td>
+              <td>${p.date_of_birth ? new Date(p.date_of_birth).toLocaleDateString('en-GB') : 'N/A'}</td>
               <td>${p.gender || 'N/A'}</td>
             </tr>
           `).join('')}
@@ -347,7 +347,7 @@ export function generatePatientRecordPDF(
         <div class="info-grid">
           <div class="info-item">
             <div class="info-label">Date of Birth</div>
-            <div class="info-value">${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString() : 'N/A'}</div>
+            <div class="info-value">${patient.date_of_birth ? new Date(patient.date_of_birth).toLocaleDateString('en-GB') : 'N/A'}</div>
           </div>
           <div class="info-item">
             <div class="info-label">Gender</div>
@@ -414,7 +414,7 @@ export function generatePatientRecordPDF(
             return `
             <div class="medical-record">
               <div class="record-header">
-                <div class="record-date">${new Date(record.visit_date).toLocaleDateString()}</div>
+                <div class="record-date">${new Date(record.visit_date).toLocaleDateString('en-GB')}</div>
                 <div class="record-type">Visit</div>
               </div>
               <div class="record-content">

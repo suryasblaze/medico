@@ -128,7 +128,7 @@ export function PatientDetailTabs({ patient, doctorId, doctorEmail, medicalRecor
                     <Pencil className="h-5 w-5 text-fuchsia-600" />
                     Edit Medical Record
                   </CardTitle>
-                  <CardDescription>Update visit record from {new Date(editingRecord.visit_date).toLocaleDateString()}</CardDescription>
+                  <CardDescription>Update visit record from {new Date(editingRecord.visit_date).toLocaleDateString('en-GB')}</CardDescription>
                 </div>
               </div>
             </CardHeader>

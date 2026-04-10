@@ -87,7 +87,7 @@ export default async function IntakeFormDetailPage({ params }: IntakeFormDetailP
                 <label className="text-sm font-medium text-muted-foreground">Date of Birth</label>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <p>{new Date(intakeForm.date_of_birth).toLocaleDateString()}</p>
+                  <p>{new Date(intakeForm.date_of_birth).toLocaleDateString('en-GB')}</p>
                 </div>
               </div>
 

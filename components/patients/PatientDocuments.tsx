@@ -433,7 +433,7 @@ export function PatientDocuments({
                   <TableCell>{getDocumentTypeBadge(doc.document_type)}</TableCell>
                   <TableCell>{formatFileSize(doc.file_size)}</TableCell>
                   <TableCell>
-                    {new Date(doc.uploaded_at).toLocaleDateString()}
+                    {new Date(doc.uploaded_at).toLocaleDateString('en-GB')}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex items-center justify-end gap-1">

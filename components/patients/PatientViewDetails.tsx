@@ -28,11 +28,7 @@ interface PatientViewDetailsProps {
 export function PatientViewDetails({ patient, medicalRecords }: PatientViewDetailsProps) {
   const formatDate = (date: string | null | undefined) => {
     if (!date) return '-'
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
+    return new Date(date).toLocaleDateString('en-GB')
   }
 
   const formatGender = (gender: string | null | undefined) => {

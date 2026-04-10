@@ -171,7 +171,7 @@ export default async function IntakeFormsPage() {
                   </div>
                   <div className="text-right text-sm">
                     <p className="text-muted-foreground">
-                      {new Date(patient.created_at).toLocaleDateString()}
+                      {new Date(patient.created_at).toLocaleDateString('en-GB')}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {new Date(patient.created_at).toLocaleTimeString()}

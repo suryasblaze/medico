@@ -85,7 +85,7 @@ export default async function SettingsPage() {
                     Member Since
                   </p>
                   <p className="text-sm">
-                    {new Date(doctor.created_at).toLocaleDateString()}
+                    {new Date(doctor.created_at).toLocaleDateString('en-GB')}
                   </p>
                 </div>
               )}
@@ -95,7 +95,7 @@ export default async function SettingsPage() {
                     Trial Ends
                   </p>
                   <p className="text-sm">
-                    {new Date(doctor.trial_ends_at).toLocaleDateString()}
+                    {new Date(doctor.trial_ends_at).toLocaleDateString('en-GB')}
                   </p>
                 </div>
               )}

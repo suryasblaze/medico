@@ -186,7 +186,7 @@ export default async function ReportsPage() {
                   </div>
                   <div className="text-right">
                     <p className="text-sm font-medium">
-                      {new Date(visit.visit_date).toLocaleDateString()}
+                      {new Date(visit.visit_date).toLocaleDateString('en-GB')}
                     </p>
                   </div>
                 </div>

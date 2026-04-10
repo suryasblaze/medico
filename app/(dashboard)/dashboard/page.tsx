@@ -1,6 +1,8 @@
 import { getCurrentDoctor, getCachedDashboardStats } from '@/lib/supabase/queries'
+import { createClient } from '@/lib/supabase/server'
 import { StatsCard } from '@/components/dashboard/StatsCard'
 import { DashboardCharts } from '@/components/dashboard/DashboardCharts'
+import { AppointmentsOverview } from '@/components/dashboard/AppointmentsOverview'
 import { Activity, Users, Calendar, TrendingUp } from 'lucide-react'
 
 export default async function DashboardPage() {
@@ -12,6 +14,47 @@ export default async function DashboardPage() {
     await getCachedDashboardStats(doctor?.id || '')
 
   const now = new Date()
+
+  // Fetch appointment data (today's schedule + last 7 days trend)
+  const supabase = createClient()
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const sevenDaysAgo = new Date(now)
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6)
+  const sevenDaysAgoStr = `${sevenDaysAgo.getFullYear()}-${String(sevenDaysAgo.getMonth() + 1).padStart(2, '0')}-${String(sevenDaysAgo.getDate()).padStart(2, '0')}`
+
+  const [{ data: todaysAppointments }, { data: weekAppointments }] = await Promise.all([
+    supabase
+      .from('appointments')
+      .select('id, start_time, end_time, title, status, patient:patients(full_name)')
+      .eq('doctor_id', doctor?.id || '')
+      .eq('appointment_date', todayStr)
+      .order('start_time', { ascending: true }),
+    supabase
+      .from('appointments')
+      .select('appointment_date, status')
+      .eq('doctor_id', doctor?.id || '')
+      .gte('appointment_date', sevenDaysAgoStr)
+      .lte('appointment_date', todayStr),
+  ])
+
+  // Build last-7-days trend
+  const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const appointmentTrend = Array.from({ length: 7 }).map((_, i) => {
+    const d = new Date(sevenDaysAgo)
+    d.setDate(d.getDate() + i)
+    const ds = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const dayAppts = (weekAppointments || []).filter((a: any) => a.appointment_date === ds)
+    return {
+      label: dayLabels[d.getDay()],
+      scheduled: dayAppts.filter((a: any) => a.status === 'scheduled').length,
+      completed: dayAppts.filter((a: any) => a.status === 'completed').length,
+    }
+  })
+
+  const todaysList = (todaysAppointments || []).map((a: any) => ({
+    ...a,
+    patient: Array.isArray(a.patient) ? a.patient[0] : a.patient,
+  }))
 
   // Calculate stats
   const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
@@ -95,6 +138,9 @@ export default async function DashboardPage() {
           Welcome back, Dr. {doctor?.full_name}
         </p>
       </div>
+
+      {/* Today's Schedule + Appointments Chart */}
+      <AppointmentsOverview todays={todaysList} trend={appointmentTrend} />
 
       {/* Stats */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">

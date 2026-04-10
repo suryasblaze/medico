@@ -21,18 +21,20 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover'
-import { Search, Eye, Mail, Phone, User } from 'lucide-react'
+import { Search, Eye, Mail, Phone } from 'lucide-react'
 import { AvatarImage } from '@/components/ui/optimized-image'
 
+type PatientWithLastVisit = Patient & { last_visit_date?: string | null }
+
 interface PatientsListProps {
-  patients: Patient[]
+  patients: PatientWithLastVisit[]
   doctorId: string
 }
 
 export function PatientsList({ patients: initialPatients, doctorId }: PatientsListProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const debouncedSearch = useDebounce(searchQuery, 300)
-  const [patients, setPatients] = useState<Patient[]>(initialPatients)
+  const [patients, setPatients] = useState<PatientWithLastVisit[]>(initialPatients)
 
   // Real-time subscription
   useEffect(() => {
@@ -136,7 +138,7 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
               <TableHead>Contact</TableHead>
               <TableHead>Date of Birth</TableHead>
               <TableHead>VRN</TableHead>
-              <TableHead>Created</TableHead>
+              <TableHead>Last Visit</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -210,14 +212,16 @@ export function PatientsList({ patients: initialPatients, doctorId }: PatientsLi
                   </TableCell>
                   <TableCell>
                     {patient.date_of_birth
-                      ? new Date(patient.date_of_birth).toLocaleDateString()
+                      ? new Date(patient.date_of_birth).toLocaleDateString('en-GB')
                       : '-'}
                   </TableCell>
                   <TableCell>
                     {patient.medical_record_number || '-'}
                   </TableCell>
                   <TableCell>
-                    {new Date(patient.created_at).toLocaleDateString()}
+                    {patient.last_visit_date
+                      ? new Date(patient.last_visit_date).toLocaleDateString('en-GB')
+                      : '-'}
                   </TableCell>
                   <TableCell className="text-right">
                     <Link href={`/patients/${patient.id}`}>

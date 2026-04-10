@@ -22,11 +22,7 @@ export async function POST(request: NextRequest) {
     const header = {
       clinicName: doctor.clinic_name || `${doctor.full_name}'s Practice`,
       doctorName: doctor.full_name,
-      date: new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      })
+      date: new Date().toLocaleDateString('en-GB')
     }
 
     let htmlContent = ''

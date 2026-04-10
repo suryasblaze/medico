@@ -717,15 +717,7 @@ export function AppointmentsCalendar({
                   <p className="text-sm text-muted-foreground">Date</p>
                   <p className="font-medium flex items-center gap-1">
                     <Calendar className="h-4 w-4" />
-                    {new Date(selectedAppointment.appointment_date).toLocaleDateString(
-                      'en-IN',
-                      {
-                        weekday: 'short',
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      }
-                    )}
+                    {new Date(selectedAppointment.appointment_date).toLocaleDateString('en-GB')}
                   </p>
                 </div>
                 <div>

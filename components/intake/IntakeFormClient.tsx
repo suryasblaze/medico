@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateInputDMY } from '@/components/ui/date-input-dmy'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -424,12 +425,13 @@ export function IntakeFormClient({ doctorId }: IntakeFormClientProps) {
             <Label htmlFor="date_of_birth" className="text-fuchsia-700 dark:text-fuchsia-300">
               Date of Birth <span className="text-orange-500">*</span>
             </Label>
-            <Input
+            <DateInputDMY
               id="date_of_birth"
               name="date_of_birth"
-              type="date"
               value={formData.date_of_birth}
-              onChange={handleChange}
+              onChange={(iso) =>
+                setFormData((prev) => ({ ...prev, date_of_birth: iso }))
+              }
               required
               disabled={loading}
             />

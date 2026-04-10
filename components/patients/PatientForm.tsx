@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { DateInputDMY } from '@/components/ui/date-input-dmy'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import {
@@ -535,12 +536,11 @@ export function PatientForm({ doctorId, patient }: PatientFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="date_of_birth">Date of Birth</Label>
-            <Input
+            <DateInputDMY
               id="date_of_birth"
-              type="date"
               value={formData.date_of_birth}
-              onChange={(e) =>
-                setFormData({ ...formData, date_of_birth: e.target.value })
+              onChange={(iso) =>
+                setFormData({ ...formData, date_of_birth: iso })
               }
               disabled={loading}
             />

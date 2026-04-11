@@ -81,7 +81,11 @@ export function MedicalRecordForm({ patientId, doctorId, onSuccess, record, onCa
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([])
-  const [visitDate, setVisitDate] = useState(record?.visit_date || new Date().toISOString().split('T')[0])
+  const [visitDate, setVisitDate] = useState(
+    record?.visit_date
+      ? new Date(record.visit_date).toISOString().split('T')[0]
+      : new Date().toISOString().split('T')[0]
+  )
   const isEditing = !!record
 
   // Set initial content when editing
